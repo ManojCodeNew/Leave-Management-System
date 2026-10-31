@@ -16,7 +16,7 @@ The application is deployed and hosted on high-availability cloud infrastructure
 
 | Component | Hosting Platform | Live URL / Endpoint | Status |
 |---|---|---|:---:|
-| **Frontend Web App** | **Vercel** (Global Edge CDN) | [https://leave-management-system-delta-ruddy.vercel.app/](https://leave-management-system-delta-ruddy.vercel.app/) | 🟢 Live |
+| **Frontend Web App** | **Vercel** (Global Edge CDN) | https://leavemanagementsystemtask.vercel.app/ | 🟢 Live |
 | **Backend REST API** | **Render** (Containerized Node.js Web Service) | [https://leave-management-system-5iol.onrender.com](https://leave-management-system-5iol.onrender.com) | 🟢 Live |
 | **Cloud Database** | **MongoDB Atlas Cloud** | Multi-Region M0 Replica Cluster | 🟢 Connected |
 
