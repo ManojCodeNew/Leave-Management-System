@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import authRoutes from './routes/auth.routes.js';
@@ -47,13 +48,30 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Health check endpoint
+// Health check endpoint (checks MongoDB connection status)
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    message: 'Leave Management System API is healthy and running.',
+  const isDbConnected = mongoose.connection.readyState === 1;
+  res.status(isDbConnected ? 200 : 503).json({
+    status: isDbConnected ? 'ok' : 'degraded',
+    database: isDbConnected ? 'connected' : 'disconnected',
+    message: isDbConnected
+      ? 'Leave Management System API is healthy and connected to MongoDB.'
+      : 'API is running but MongoDB is not connected. Please check MONGODB_URI and MongoDB Atlas Network Access (IP Whitelist 0.0.0.0/0).',
     timestamp: new Date().toISOString(),
   });
+});
+
+// Middleware to prevent buffering timeouts if database is not connected
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health') return next();
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message:
+        'Database connection unavailable. In MongoDB Atlas, go to "Network Access" and ensure IP 0.0.0.0/0 (Allow Access from Anywhere) is added, and verify MONGODB_URI in your cloud environment variables.',
+    });
+  }
+  next();
 });
 
 // Mount modular routes
