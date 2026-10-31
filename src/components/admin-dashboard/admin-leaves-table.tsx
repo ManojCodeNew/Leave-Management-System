@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Calendar, Search, Check, X, Filter } from 'lucide-react';
+import { Calendar, Search, Check, X, Filter, Loader2 } from 'lucide-react';
 import { LeaveApplication, LeaveStatus } from '../../types/leave.types';
 import StatusBadge from '../ui/status-badge';
 import AppButton from '../ui/buttons/app-button';
@@ -12,6 +12,7 @@ import { formatDate, formatDateTime } from '../../utils/date.utils';
 import { formatDuration } from '../../utils/format.utils';
 import { LEAVE_STATUS_OPTIONS } from '../../config/data';
 import { useApproveLeave, useRejectLeave } from '../../hooks/use-admin';
+import { useInfiniteScroll } from '../../hooks/use-infinite-scroll';
 
 export interface AdminLeavesTableProps {
   leaves: LeaveApplication[];
@@ -19,6 +20,11 @@ export interface AdminLeavesTableProps {
   onStatusChange?: (status: LeaveStatus | 'ALL') => void;
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
+  totalCount?: number;
+  totalPages?: number;
 }
 
 export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
@@ -27,6 +33,11 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
   onStatusChange,
   searchTerm = '',
   onSearchChange,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
+  totalCount = leaves.length,
+  totalPages = 1,
 }) => {
   const [filter, setFilter] = useState<LeaveStatus | 'ALL'>(selectedStatus);
   const [search, setSearch] = useState(searchTerm);
@@ -38,6 +49,13 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
 
   const approveMutation = useApproveLeave();
   const rejectMutation = useRejectLeave();
+
+  // Attach infinite scroll observer to sentinel element
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    onLoadMore: onLoadMore || (() => {}),
+  });
 
   const handleFilterChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -96,38 +114,13 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
     }
   }, [selectedLeave, actionType, comment, approveMutation, rejectMutation, handleCloseModal]);
 
-  const filtered = useMemo(() => {
-    const query = search.toLowerCase().trim();
-
-    return leaves.filter((leave) => {
-      const statusMatch =
-        filter === 'ALL' || leave.status.toUpperCase() === filter.toUpperCase();
-
-      if (!statusMatch) return false;
-      if (!query) return true;
-
-      const empObj = typeof leave.employee === 'object' ? leave.employee : null;
-      const name = empObj?.name?.toLowerCase() || '';
-      const email = empObj?.email?.toLowerCase() || '';
-      const code = empObj?.employeeId?.toLowerCase() || '';
-      const reason = leave.reason?.toLowerCase() || '';
-
-      return (
-        name.includes(query) ||
-        email.includes(query) ||
-        code.includes(query) ||
-        reason.includes(query)
-      );
-    });
-  }, [leaves, filter, search]);
-
   return (
     <div className="space-y-4 text-left">
       {/* Search and Filters Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="w-full sm:w-72">
+        <div className="w-full sm:w-80">
           <AppInput
-            placeholder="Search employee, email, reason..."
+            placeholder="Search employee, email, reason (debounced)..."
             value={search}
             onChange={handleSearchChange}
             icon={<Search className="w-4 h-4" />}
@@ -143,8 +136,21 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
         </div>
       </div>
 
+      {/* Pagination Status Counter */}
+      <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+        <span>
+          Showing <strong className="text-slate-800">{leaves.length}</strong> of{' '}
+          <strong className="text-slate-800">{totalCount}</strong> applications
+        </span>
+        {totalPages > 1 && (
+          <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+            Page 1 to {Math.ceil(leaves.length / 10) || 1} of {totalPages}
+          </span>
+        )}
+      </div>
+
       {/* Table */}
-      {filtered.length === 0 ? (
+      {leaves.length === 0 ? (
         <EmptyState
           title="No Leave Records Found"
           description="Try adjusting your search criteria or status filter to see other records."
@@ -165,7 +171,7 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {filtered.map((leave) => {
+                {leaves.map((leave) => {
                   const empObj = typeof leave.employee === 'object' ? leave.employee : null;
                   const empName = empObj?.name || 'Unknown';
                   const empEmail = empObj?.email || '';
@@ -235,6 +241,33 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Infinite Scroll Sentinel & Loader */}
+          <div ref={loadMoreRef} className="py-4 px-6 border-t border-slate-100 text-center">
+            {isFetchingNextPage ? (
+              <div className="flex items-center justify-center gap-2 text-xs font-semibold text-indigo-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading more leave applications on scroll...</span>
+              </div>
+            ) : hasNextPage ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xs text-slate-400">Scroll down to fetch next page</span>
+                {onLoadMore && (
+                  <button
+                    type="button"
+                    onClick={onLoadMore}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline ml-2"
+                  >
+                    (or click to load more)
+                  </button>
+                )}
+              </div>
+            ) : leaves.length > 0 ? (
+              <p className="text-xs text-slate-400 font-medium">
+                ✓ All {totalCount} records loaded
+              </p>
+            ) : null}
           </div>
         </div>
       )}

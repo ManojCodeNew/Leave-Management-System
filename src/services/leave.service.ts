@@ -6,6 +6,7 @@ import {
   EmployeeDashboardData,
   LeaveStatus,
 } from '../types/leave.types';
+import { PaginatedResult } from '../types/pagination.types';
 
 export const leaveService = {
   createLeave: async (payload: CreateLeavePayload): Promise<LeaveApplication> => {
@@ -14,9 +15,40 @@ export const leaveService = {
   },
 
   getMyLeaves: async (status?: LeaveStatus | 'ALL'): Promise<LeaveApplication[]> => {
-    const params = status && status !== 'ALL' ? { status } : {};
+    const params = status && status !== 'ALL' ? { status, limit: 100 } : { limit: 100 };
     const response = await api.get(ENDPOINTS.leave.list, { params });
     return response.data.data;
+  },
+
+  getMyLeavesPaginated: async (options?: {
+    status?: LeaveStatus | 'ALL';
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResult<LeaveApplication>> => {
+    const params: Record<string, any> = {
+      page: options?.page || 1,
+      limit: options?.limit || 10,
+    };
+    if (options?.status && options.status !== 'ALL') {
+      params.status = options.status;
+    }
+    if (options?.search && options.search.trim()) {
+      params.search = options.search.trim();
+    }
+
+    const response = await api.get(ENDPOINTS.leave.list, { params });
+    return {
+      items: response.data.data || [],
+      meta: response.data.meta || {
+        totalCount: response.data.count || 0,
+        totalPages: 1,
+        currentPage: options?.page || 1,
+        limit: options?.limit || 10,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    };
   },
 
   getMyBalance: async (): Promise<EmployeeDashboardData> => {
@@ -29,4 +61,5 @@ export const leaveService = {
     return response.data.data;
   },
 };
+
 

@@ -200,21 +200,42 @@ export const createLeave = async (req: AuthRequest, res: Response): Promise<void
 export const getMyLeaves = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const employeeId = req.user?._id;
-    const { status } = req.query;
+    const { status, search } = req.query;
+
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
+    const limit = Math.max(1, parseInt(String(req.query.limit || '10'), 10));
+    const skip = (page - 1) * limit;
 
     const filter: any = { employee: employeeId };
     if (status && ['PENDING', 'APPROVED', 'REJECTED'].includes(String(status).toUpperCase())) {
       filter.status = String(status).toUpperCase();
     }
 
+    if (search && String(search).trim()) {
+      filter.reason = { $regex: String(search).trim(), $options: 'i' };
+    }
+
+    const totalCount = await LeaveApplication.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
     const leaves = await LeaveApplication.find(filter)
       .sort({ appliedAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate('reviewedBy', 'name email');
 
     res.status(200).json({
       success: true,
       count: leaves.length,
       data: leaves,
+      meta: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
     });
   } catch (error: any) {
     res.status(500).json({

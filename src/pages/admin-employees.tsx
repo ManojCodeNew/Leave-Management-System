@@ -1,17 +1,43 @@
-import React, { useState } from 'react';
-import { Users, Search, ShieldCheck, Mail, Calendar } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Users, Search, ShieldCheck, Mail, Calendar, Loader2 } from 'lucide-react';
 import Navbar from '../components/ui/navbar';
 import AppInput from '../components/ui/inputs/app-input';
 import EmptyState from '../components/ui/empty-state';
 import LoadingSpinner from '../components/ui/loading-spinner';
-import { useAdminEmployees } from '../hooks/use-admin';
-import { formatDate } from '../../src/utils/date.utils';
+import { useInfiniteAdminEmployees } from '../hooks/use-admin';
+import { useDebounce } from '../hooks/use-debounce';
+import { useInfiniteScroll } from '../hooks/use-infinite-scroll';
 
 export const AdminEmployeesPage: React.FC = () => {
-  const [search, setSearch] = useState('');
-  const { data: employees = [], isLoading } = useAdminEmployees();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  if (isLoading) {
+  // 400ms search debouncing for optimal backend query performance
+  const debouncedSearch = useDebounce(searchTerm, 400);
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteAdminEmployees(debouncedSearch, 10);
+
+  const employees = useMemo(
+    () => data?.pages.flatMap((page) => page.items) || [],
+    [data]
+  );
+
+  const totalCount = data?.pages[0]?.meta?.totalCount ?? employees.length;
+  const totalPages = data?.pages[0]?.meta?.totalPages ?? 1;
+
+  // Infinite scroll trigger
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    onLoadMore: fetchNextPage,
+  });
+
+  if (isLoading && employees.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50">
         <Navbar />
@@ -19,17 +45,6 @@ export const AdminEmployeesPage: React.FC = () => {
       </div>
     );
   }
-
-  const filteredEmployees = employees.filter((emp) => {
-    const q = search.toLowerCase().trim();
-    return (
-      !q ||
-      emp.name.toLowerCase().includes(q) ||
-      emp.email.toLowerCase().includes(q) ||
-      emp.department.toLowerCase().includes(q) ||
-      emp.employeeId.toLowerCase().includes(q)
-    );
-  });
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
@@ -40,21 +55,34 @@ export const AdminEmployeesPage: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Organization Employees</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Overview of all registered staff members, departments, and leave balance allocations.
+              Overview of all registered staff members, departments, and leave balance allocations with infinite scroll.
             </p>
           </div>
 
-          <div className="w-full sm:w-72">
+          <div className="w-full sm:w-80">
             <AppInput
-              placeholder="Search by name, email, department..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, email, department (debounced)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               icon={<Search className="w-4 h-4" />}
             />
           </div>
         </div>
 
-        {filteredEmployees.length === 0 ? (
+        {/* Counter Header */}
+        <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+          <span>
+            Showing <strong className="text-slate-800">{employees.length}</strong> of{' '}
+            <strong className="text-slate-800">{totalCount}</strong> employees
+          </span>
+          {totalPages > 1 && (
+            <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+              Page 1 to {Math.ceil(employees.length / 10) || 1} of {totalPages}
+            </span>
+          )}
+        </div>
+
+        {employees.length === 0 ? (
           <EmptyState
             title="No Employees Found"
             description="No employee records match your search criteria."
@@ -75,7 +103,7 @@ export const AdminEmployeesPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {filteredEmployees.map((emp) => (
+                  {employees.map((emp) => (
                     <tr key={emp.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-4 px-4 sm:px-6 font-mono text-xs font-bold text-slate-600">
                         {emp.employeeId}
@@ -129,6 +157,31 @@ export const AdminEmployeesPage: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Infinite Scroll Trigger on Scroll */}
+            <div ref={loadMoreRef} className="py-4 px-6 border-t border-slate-100 text-center">
+              {isFetchingNextPage ? (
+                <div className="flex items-center justify-center gap-2 text-xs font-semibold text-indigo-600">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Loading more employees on scroll...</span>
+                </div>
+              ) : hasNextPage ? (
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-xs text-slate-400">Scroll down to fetch next page</span>
+                  <button
+                    type="button"
+                    onClick={() => fetchNextPage()}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline ml-2"
+                  >
+                    (or click to load more)
+                  </button>
+                </div>
+              ) : employees.length > 0 ? (
+                <p className="text-xs text-slate-400 font-medium">
+                  ✓ All {totalCount} employees loaded
+                </p>
+              ) : null}
             </div>
           </div>
         )}

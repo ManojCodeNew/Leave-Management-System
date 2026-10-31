@@ -52,6 +52,10 @@ export const getAllLeaves = async (req: AuthRequest, res: Response): Promise<voi
   try {
     const { status, employeeId, search } = req.query;
 
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
+    const limit = Math.max(1, parseInt(String(req.query.limit || '10'), 10));
+    const skip = (page - 1) * limit;
+
     const filter: any = {};
     if (status && ['PENDING', 'APPROVED', 'REJECTED'].includes(String(status).toUpperCase())) {
       filter.status = String(status).toUpperCase();
@@ -60,26 +64,46 @@ export const getAllLeaves = async (req: AuthRequest, res: Response): Promise<voi
       filter.employee = employeeId;
     }
 
-    let leaves = await LeaveApplication.find(filter)
+    if (search && String(search).trim()) {
+      const term = String(search).trim();
+      const matchedUsers = await User.find({
+        $or: [
+          { name: { $regex: term, $options: 'i' } },
+          { email: { $regex: term, $options: 'i' } },
+          { employeeId: { $regex: term, $options: 'i' } },
+          { department: { $regex: term, $options: 'i' } },
+        ],
+      }).select('_id');
+
+      const userIds = matchedUsers.map((u) => u._id);
+      filter.$or = [
+        { employee: { $in: userIds } },
+        { reason: { $regex: term, $options: 'i' } },
+      ];
+    }
+
+    const totalCount = await LeaveApplication.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    const leaves = await LeaveApplication.find(filter)
       .sort({ appliedAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate('employee', 'name email employeeId department availableLeave usedLeave leaveAllocation')
       .populate('reviewedBy', 'name email');
-
-    // Optional text search filter by employee name or email
-    if (search) {
-      const term = String(search).toLowerCase();
-      leaves = leaves.filter((item: any) => {
-        const empName = item.employee?.name?.toLowerCase() || '';
-        const empEmail = item.employee?.email?.toLowerCase() || '';
-        const empCode = item.employee?.employeeId?.toLowerCase() || '';
-        return empName.includes(term) || empEmail.includes(term) || empCode.includes(term);
-      });
-    }
 
     res.status(200).json({
       success: true,
       count: leaves.length,
       data: leaves,
+      meta: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
     });
   } catch (error: any) {
     res.status(500).json({
@@ -237,11 +261,32 @@ export const rejectLeave = async (req: AuthRequest, res: Response): Promise<void
   }
 };
 
-export const getAllEmployees = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getAllEmployees = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const employees = await User.find({ role: 'EMPLOYEE' })
+    const { search } = req.query;
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
+    const limit = Math.max(1, parseInt(String(req.query.limit || '10'), 10));
+    const skip = (page - 1) * limit;
+
+    const filter: any = { role: 'EMPLOYEE' };
+    if (search && String(search).trim()) {
+      const term = String(search).trim();
+      filter.$or = [
+        { name: { $regex: term, $options: 'i' } },
+        { email: { $regex: term, $options: 'i' } },
+        { employeeId: { $regex: term, $options: 'i' } },
+        { department: { $regex: term, $options: 'i' } },
+      ];
+    }
+
+    const totalCount = await User.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    const employees = await User.find(filter)
       .select('-password')
-      .sort({ name: 1 });
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit);
 
     // Enrich with count of pending, approved, and rejected leaves
     const enrichedEmployees = await Promise.all(
@@ -282,6 +327,14 @@ export const getAllEmployees = async (_req: AuthRequest, res: Response): Promise
       success: true,
       count: enrichedEmployees.length,
       data: enrichedEmployees,
+      meta: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
     });
   } catch (error: any) {
     res.status(500).json({

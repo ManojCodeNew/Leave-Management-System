@@ -1,22 +1,41 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, PlusCircle } from 'lucide-react';
 import Navbar from '../components/ui/navbar';
 import LeaveHistoryTable from '../components/employee-dashboard/leave-history-table';
 import AppButton from '../components/ui/buttons/app-button';
 import LoadingSpinner from '../components/ui/loading-spinner';
-import { useMyLeaves } from '../hooks/use-leave';
+import { useInfiniteMyLeaves } from '../hooks/use-leave';
+import { useDebounce } from '../hooks/use-debounce';
+import { LeaveStatus } from '../types/leave.types';
 
 export const LeaveHistoryPage: React.FC = () => {
   const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState<LeaveStatus | 'ALL'>('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // 400ms debounced search
+  const debouncedSearch = useDebounce(searchTerm, 400);
+
   const {
-    data: leaves = [],
+    data,
     isLoading,
     isRefetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     refetch,
-  } = useMyLeaves();
+  } = useInfiniteMyLeaves(statusFilter, debouncedSearch, 10);
 
-  if (isLoading) {
+  const leaves = useMemo(
+    () => data?.pages.flatMap((page) => page.items) || [],
+    [data]
+  );
+
+  const totalCount = data?.pages[0]?.meta?.totalCount ?? leaves.length;
+  const totalPages = data?.pages[0]?.meta?.totalPages ?? 1;
+
+  if (isLoading && leaves.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50">
         <Navbar />
@@ -41,7 +60,7 @@ export const LeaveHistoryPage: React.FC = () => {
             </button>
             <h1 className="text-2xl font-bold text-slate-900">My Leave History</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Comprehensive log of all your submitted leave applications.
+              Comprehensive log of all your submitted leave applications with infinite scroll.
             </p>
           </div>
 
@@ -57,12 +76,21 @@ export const LeaveHistoryPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Full Table with Refresh Option */}
+        {/* Full Table with Infinite Scroll & Refresh */}
         <LeaveHistoryTable
           leaves={leaves}
+          selectedStatus={statusFilter}
+          onStatusChange={setStatusFilter}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
           isLoading={isLoading}
           onRefresh={refetch}
           isRefreshing={isRefetching}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={fetchNextPage}
+          totalCount={totalCount}
+          totalPages={totalPages}
         />
       </main>
     </div>
