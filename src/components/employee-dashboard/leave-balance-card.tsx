@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Calendar, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
 import { LeaveBalanceSummary } from '../../types/leave.types';
 
@@ -8,7 +8,7 @@ export interface LeaveBalanceCardProps {
   department?: string;
 }
 
-export const LeaveBalanceCard: React.FC<LeaveBalanceCardProps> = ({
+export const LeaveBalanceCard: React.FC<LeaveBalanceCardProps> = React.memo(({
   balance = {
     leaveAllocation: 0,
     usedLeave: 0,
@@ -19,10 +19,11 @@ export const LeaveBalanceCard: React.FC<LeaveBalanceCardProps> = ({
   employeeName,
   department,
 }) => {
-  const percentageUsed =
-    balance.leaveAllocation > 0
+  const percentageUsed = useMemo(() => {
+    return balance.leaveAllocation > 0
       ? Math.min(100, Math.round((balance.usedLeave / balance.leaveAllocation) * 100))
       : 0;
+  }, [balance.leaveAllocation, balance.usedLeave]);
 
   return (
     <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-left">
@@ -122,7 +123,9 @@ export const LeaveBalanceCard: React.FC<LeaveBalanceCardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+LeaveBalanceCard.displayName = 'LeaveBalanceCard';
 
 export default LeaveBalanceCard;
 

@@ -43,10 +43,12 @@ export const isSunday = (dateInput: string | Date): boolean => {
 
 // Calculate requested working days strictly excluding Sundays
 // Saturday is an eligible working day (+1), Sunday is excluded (+0)
-export const calculateLeaveDays = (startDate: string, endDate: string): number => {
-  if (!startDate || !endDate) return 0;
+// If endDate is omitted, defaults to a single-day leave on startDate
+export const calculateLeaveDays = (startDate: string, endDate?: string): number => {
+  if (!startDate) return 0;
+  const effectiveEnd = endDate && endDate.trim() ? endDate : startDate;
   const start = parseLocalDate(startDate);
-  const end = parseLocalDate(endDate);
+  const end = parseLocalDate(effectiveEnd);
 
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return 0;
 
@@ -64,10 +66,11 @@ export const calculateLeaveDays = (startDate: string, endDate: string): number =
 };
 
 // Count how many Sundays fall within the date range
-export const countSundaysInRange = (startDate: string, endDate: string): number => {
-  if (!startDate || !endDate) return 0;
+export const countSundaysInRange = (startDate: string, endDate?: string): number => {
+  if (!startDate) return 0;
+  const effectiveEnd = endDate && endDate.trim() ? endDate : startDate;
   const start = parseLocalDate(startDate);
-  const end = parseLocalDate(endDate);
+  const end = parseLocalDate(effectiveEnd);
 
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return 0;
 
@@ -106,15 +109,16 @@ export const isDateInApprovedRange = (
 // Checks if [start, end] overlaps with any approved leave
 export const checkDateRangeOverlapsApproved = (
   startDate: string,
-  endDate: string,
+  endDate?: string,
   approvedRanges: ApprovedLeaveDateRange[] = []
 ): { overlaps: boolean; conflictingRange?: ApprovedLeaveDateRange } => {
-  if (!startDate || !endDate || approvedRanges.length === 0) {
+  if (!startDate || approvedRanges.length === 0) {
     return { overlaps: false };
   }
 
+  const effectiveEnd = endDate && endDate.trim() ? endDate : startDate;
   const newStart = parseLocalDate(startDate).getTime();
-  const newEnd = parseLocalDate(endDate).getTime();
+  const newEnd = parseLocalDate(effectiveEnd).getTime();
 
   for (const range of approvedRanges) {
     const appStart = parseLocalDate(range.startDate).getTime();

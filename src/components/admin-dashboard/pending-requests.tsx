@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Calendar, Check, X, MessageSquare, AlertCircle, User } from 'lucide-react';
 import { LeaveApplication } from '../../types/leave.types';
 import StatusBadge from '../ui/status-badge';
@@ -23,21 +23,24 @@ export const PendingRequests: React.FC<PendingRequestsProps> = ({ pendingLeaves 
   const approveMutation = useApproveLeave();
   const rejectMutation = useRejectLeave();
 
-  const handleOpenActionModal = (leave: LeaveApplication, type: 'APPROVE' | 'REJECT') => {
-    setSelectedLeave(leave);
-    setActionType(type);
-    setComment('');
-    setErrorMessage(null);
-  };
+  const handleOpenActionModal = useCallback(
+    (leave: LeaveApplication, type: 'APPROVE' | 'REJECT') => {
+      setSelectedLeave(leave);
+      setActionType(type);
+      setComment('');
+      setErrorMessage(null);
+    },
+    []
+  );
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedLeave(null);
     setActionType(null);
     setComment('');
     setErrorMessage(null);
-  };
+  }, []);
 
-  const handleConfirmAction = async () => {
+  const handleConfirmAction = useCallback(async () => {
     if (!selectedLeave || !actionType) return;
     setErrorMessage(null);
 
@@ -57,7 +60,7 @@ export const PendingRequests: React.FC<PendingRequestsProps> = ({ pendingLeaves 
     } catch (err: any) {
       setErrorMessage(err.message || `Failed to ${actionType.toLowerCase()} application.`);
     }
-  };
+  }, [selectedLeave, actionType, comment, approveMutation, rejectMutation, handleCloseModal]);
 
   const isPendingAction = approveMutation.isPending || rejectMutation.isPending;
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import Navbar from '../components/ui/navbar';
@@ -10,6 +10,16 @@ export const ApplyLeavePage: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useLeaveBalance();
 
+  const availableBalance = useMemo(
+    () => data?.balance?.availableLeave ?? 20,
+    [data?.balance?.availableLeave]
+  );
+
+  const approvedLeaves = useMemo(
+    () => data?.approvedLeaves || [],
+    [data?.approvedLeaves]
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -18,9 +28,6 @@ export const ApplyLeavePage: React.FC = () => {
       </div>
     );
   }
-
-  const availableBalance = data?.balance?.availableLeave ?? 20;
-  const approvedLeaves = data?.approvedLeaves || [];
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16">

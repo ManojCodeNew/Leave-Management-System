@@ -24,7 +24,7 @@ export interface LeaveApplication {
 
 export interface CreateLeavePayload {
   startDate: string;
-  endDate: string;
+  endDate?: string;
   reason: string;
 }
 

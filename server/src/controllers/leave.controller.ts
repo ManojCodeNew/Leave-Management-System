@@ -62,16 +62,19 @@ export const createLeave = async (req: AuthRequest, res: Response): Promise<void
     const { startDate, endDate, reason } = req.body;
     const employeeId = req.user?._id;
 
-    if (!startDate || !endDate || !reason) {
+    if (!startDate || !reason) {
       res.status(400).json({
         success: false,
-        message: 'Start date, end date, and reason are required.',
+        message: 'Start date and reason for leave are required.',
       });
       return;
     }
 
+    // Optional End Date: If not provided, consider it a 1-day leave on the start date
+    const effectiveEndDate = endDate && String(endDate).trim() ? endDate : startDate;
+
     const start = parseUTCStartOfDay(startDate);
-    const end = parseUTCEndOfDay(endDate);
+    const end = parseUTCEndOfDay(effectiveEndDate);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       res.status(400).json({

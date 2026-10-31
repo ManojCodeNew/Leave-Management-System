@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Calendar, Filter, FileText, RotateCw } from 'lucide-react';
 import { LeaveApplication, LeaveStatus } from '../../types/leave.types';
 import StatusBadge from '../ui/status-badge';
@@ -27,18 +27,22 @@ export const LeaveHistoryTable: React.FC<LeaveHistoryTableProps> = ({
 }) => {
   const [filter, setFilter] = useState<LeaveStatus | 'ALL'>(selectedStatus);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value as LeaveStatus | 'ALL';
-    setFilter(val);
-    if (onStatusChange) {
-      onStatusChange(val);
-    }
-  };
+  const handleFilterChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const val = e.target.value as LeaveStatus | 'ALL';
+      setFilter(val);
+      if (onStatusChange) {
+        onStatusChange(val);
+      }
+    },
+    [onStatusChange]
+  );
 
-  const filteredLeaves =
-    filter === 'ALL'
+  const filteredLeaves = useMemo(() => {
+    return filter === 'ALL'
       ? leaves
       : leaves.filter((l) => l.status.toUpperCase() === filter.toUpperCase());
+  }, [leaves, filter]);
 
   return (
     <div className="space-y-4 text-left">

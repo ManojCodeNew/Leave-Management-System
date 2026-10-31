@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Calendar, Search, Check, X, Filter } from 'lucide-react';
 import { LeaveApplication, LeaveStatus } from '../../types/leave.types';
 import StatusBadge from '../ui/status-badge';
@@ -39,33 +39,42 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
   const approveMutation = useApproveLeave();
   const rejectMutation = useRejectLeave();
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value as LeaveStatus | 'ALL';
-    setFilter(val);
-    if (onStatusChange) onStatusChange(val);
-  };
+  const handleFilterChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const val = e.target.value as LeaveStatus | 'ALL';
+      setFilter(val);
+      if (onStatusChange) onStatusChange(val);
+    },
+    [onStatusChange]
+  );
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setSearch(val);
-    if (onSearchChange) onSearchChange(val);
-  };
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setSearch(val);
+      if (onSearchChange) onSearchChange(val);
+    },
+    [onSearchChange]
+  );
 
-  const handleOpenActionModal = (leave: LeaveApplication, type: 'APPROVE' | 'REJECT') => {
-    setSelectedLeave(leave);
-    setActionType(type);
-    setComment('');
-    setErrorMessage(null);
-  };
+  const handleOpenActionModal = useCallback(
+    (leave: LeaveApplication, type: 'APPROVE' | 'REJECT') => {
+      setSelectedLeave(leave);
+      setActionType(type);
+      setComment('');
+      setErrorMessage(null);
+    },
+    []
+  );
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedLeave(null);
     setActionType(null);
     setComment('');
     setErrorMessage(null);
-  };
+  }, []);
 
-  const handleConfirmAction = async () => {
+  const handleConfirmAction = useCallback(async () => {
     if (!selectedLeave || !actionType) return;
     setErrorMessage(null);
 
@@ -85,28 +94,32 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
     } catch (err: any) {
       setErrorMessage(err.message || `Failed to ${actionType.toLowerCase()} application.`);
     }
-  };
+  }, [selectedLeave, actionType, comment, approveMutation, rejectMutation, handleCloseModal]);
 
-  const filtered = leaves.filter((leave) => {
-    const statusMatch =
-      filter === 'ALL' || leave.status.toUpperCase() === filter.toUpperCase();
-
-    const empObj = typeof leave.employee === 'object' ? leave.employee : null;
-    const name = empObj?.name?.toLowerCase() || '';
-    const email = empObj?.email?.toLowerCase() || '';
-    const code = empObj?.employeeId?.toLowerCase() || '';
-    const reason = leave.reason?.toLowerCase() || '';
+  const filtered = useMemo(() => {
     const query = search.toLowerCase().trim();
 
-    const searchMatch =
-      !query ||
-      name.includes(query) ||
-      email.includes(query) ||
-      code.includes(query) ||
-      reason.includes(query);
+    return leaves.filter((leave) => {
+      const statusMatch =
+        filter === 'ALL' || leave.status.toUpperCase() === filter.toUpperCase();
 
-    return statusMatch && searchMatch;
-  });
+      if (!statusMatch) return false;
+      if (!query) return true;
+
+      const empObj = typeof leave.employee === 'object' ? leave.employee : null;
+      const name = empObj?.name?.toLowerCase() || '';
+      const email = empObj?.email?.toLowerCase() || '';
+      const code = empObj?.employeeId?.toLowerCase() || '';
+      const reason = leave.reason?.toLowerCase() || '';
+
+      return (
+        name.includes(query) ||
+        email.includes(query) ||
+        code.includes(query) ||
+        reason.includes(query)
+      );
+    });
+  }, [leaves, filter, search]);
 
   return (
     <div className="space-y-4 text-left">

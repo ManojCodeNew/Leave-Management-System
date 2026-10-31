@@ -13,7 +13,7 @@ export interface RecentLeaveRequestsProps {
   onOpenApplyModal?: () => void;
 }
 
-export const RecentLeaveRequests: React.FC<RecentLeaveRequestsProps> = ({
+export const RecentLeaveRequests: React.FC<RecentLeaveRequestsProps> = React.memo(({
   applications,
   onOpenApplyModal,
 }) => {
@@ -103,7 +103,9 @@ export const RecentLeaveRequests: React.FC<RecentLeaveRequestsProps> = ({
       )}
     </div>
   );
-};
+});
+
+RecentLeaveRequests.displayName = 'RecentLeaveRequests';
 
 export default RecentLeaveRequests;
 

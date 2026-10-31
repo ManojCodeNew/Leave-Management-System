@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, AlertCircle, CheckCircle2, Clock, Info, ShieldAlert } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Calendar, AlertCircle, CheckCircle2, Clock, ShieldAlert } from 'lucide-react';
 import AppButton from '../ui/buttons/app-button';
 import AppInput from '../ui/inputs/app-input';
 import AppTextarea from '../ui/inputs/app-textarea';
@@ -35,16 +35,33 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
 
   const applyLeaveMutation = useApplyLeave();
 
-  const workingDays = calculateLeaveDays(startDate, endDate);
-  const sundaysExcluded = countSundaysInRange(startDate, endDate);
-
-  const { overlaps: hasOverlap, conflictingRange } = checkDateRangeOverlapsApproved(
-    startDate,
-    endDate,
-    approvedLeaves
+  // If endDate is omitted, treat it as a 1-day leave on startDate
+  const effectiveEndDate = useMemo(
+    () => (endDate && endDate.trim() ? endDate : startDate),
+    [startDate, endDate]
   );
 
-  const handleCalendarRangeSelect = (start: string, end: string) => {
+  const isSingleDay = useMemo(
+    () => !endDate || endDate === startDate,
+    [startDate, endDate]
+  );
+
+  const workingDays = useMemo(
+    () => calculateLeaveDays(startDate, effectiveEndDate),
+    [startDate, effectiveEndDate]
+  );
+
+  const sundaysExcluded = useMemo(
+    () => countSundaysInRange(startDate, effectiveEndDate),
+    [startDate, effectiveEndDate]
+  );
+
+  const { overlaps: hasOverlap, conflictingRange } = useMemo(
+    () => checkDateRangeOverlapsApproved(startDate, effectiveEndDate, approvedLeaves),
+    [startDate, effectiveEndDate, approvedLeaves]
+  );
+
+  const handleCalendarRangeSelect = useCallback((start: string, end: string) => {
     setStartDate(start);
     setEndDate(end);
     setErrors((prev) => {
@@ -55,9 +72,10 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       delete next.form;
       return next;
     });
-  };
+  }, []);
 
-  const handleStartDateChange = (val: string) => {
+  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
     setStartDate(val);
     setErrors((prev) => {
       const next = { ...prev };
@@ -65,9 +83,10 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       delete next.overlap;
       return next;
     });
-  };
+  }, []);
 
-  const handleEndDateChange = (val: string) => {
+  const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
     setEndDate(val);
     setErrors((prev) => {
       const next = { ...prev };
@@ -75,46 +94,72 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       delete next.overlap;
       return next;
     });
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuccessMessage(null);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setSuccessMessage(null);
 
-    const payload = { startDate, endDate, reason };
-    const validationErrors = validateLeaveApplication(payload, availableBalance, approvedLeaves);
+      const payload = {
+        startDate,
+        endDate: endDate || startDate, // Optional end date defaults to start date
+        reason,
+      };
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setErrors({});
-
-    try {
-      await applyLeaveMutation.mutateAsync(payload);
-      setSuccessMessage(
-        `Leave application submitted successfully for ${workingDays} working day(s)${
-          sundaysExcluded > 0 ? ` (${sundaysExcluded} Sunday excluded)` : ''
-        }! Awaiting admin review.`
+      const validationErrors = validateLeaveApplication(
+        payload,
+        availableBalance,
+        approvedLeaves
       );
-      setStartDate('');
-      setEndDate('');
-      setReason('');
-      if (onSuccess) {
-        setTimeout(() => onSuccess(), 1600);
-      }
-    } catch (err: any) {
-      setErrors({ form: err.message || 'Failed to submit leave application.' });
-    }
-  };
 
-  const isInvalidSelection =
-    isSunday(startDate) ||
-    isSunday(endDate) ||
-    hasOverlap ||
-    workingDays <= 0 ||
-    workingDays > availableBalance;
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+
+      setErrors({});
+
+      try {
+        await applyLeaveMutation.mutateAsync(payload);
+        setSuccessMessage(
+          `Leave application submitted successfully for ${workingDays} working day(s)${
+            sundaysExcluded > 0 ? ` (${sundaysExcluded} Sunday excluded)` : ''
+          }! It is now pending admin review.`
+        );
+        setStartDate('');
+        setEndDate('');
+        setReason('');
+        if (onSuccess) {
+          setTimeout(() => onSuccess(), 1600);
+        }
+      } catch (err: any) {
+        setErrors({ form: err.message || 'Failed to submit leave application.' });
+      }
+    },
+    [
+      startDate,
+      endDate,
+      reason,
+      availableBalance,
+      approvedLeaves,
+      applyLeaveMutation,
+      workingDays,
+      sundaysExcluded,
+      onSuccess,
+    ]
+  );
+
+  const isInvalidSelection = useMemo(() => {
+    return (
+      !startDate ||
+      isSunday(startDate) ||
+      (endDate && isSunday(endDate)) ||
+      hasOverlap ||
+      workingDays <= 0 ||
+      workingDays > availableBalance
+    );
+  }, [startDate, endDate, hasOverlap, workingDays, availableBalance]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-left">
@@ -134,12 +179,12 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
 
       {/* Calendar Interactive Picker */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-1">
           <label className="block text-sm font-semibold text-slate-800">
-            Select Leave Dates on Calendar
+            Select Leave Dates
           </label>
           <span className="text-xs text-slate-500">
-            Click Start date, then click End date
+            Click 1 date for a 1-day leave, or pick a range
           </span>
         </div>
 
@@ -159,7 +204,7 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           <div>
             <p className="font-semibold">Date Overlap Detected:</p>
             <p>
-              Selected dates overlap with an existing approved leave application (
+              Selected date(s) overlap with an existing approved leave application (
               {formatDate(conflictingRange?.startDate)} to {formatDate(conflictingRange?.endDate)}
               ). Overlapping with approved leaves is strictly prohibited.
             </p>
@@ -167,7 +212,7 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
         </div>
       )}
 
-      {/* Quick Manual Date Inputs */}
+      {/* Date Inputs (Start Date required, End Date optional) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <AppInput
           label="Leave Start Date"
@@ -176,26 +221,31 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           min={getMinStartDate()}
           value={startDate}
           error={errors.startDate}
-          onChange={(e) => handleStartDateChange(e.target.value)}
+          onChange={handleStartDateChange}
           icon={<Calendar className="w-4 h-4" />}
           helperText={isSunday(startDate) ? 'Sundays cannot be selected' : undefined}
         />
 
         <AppInput
-          label="Leave End Date"
+          label="Leave End Date (Optional)"
           type="date"
-          required
           min={startDate || getMinStartDate()}
           value={endDate}
           error={errors.endDate}
-          onChange={(e) => handleEndDateChange(e.target.value)}
+          onChange={handleEndDateChange}
           icon={<Calendar className="w-4 h-4" />}
-          helperText={isSunday(endDate) ? 'Sundays cannot be selected' : undefined}
+          helperText={
+            endDate
+              ? isSunday(endDate)
+                ? 'Sundays cannot be selected'
+                : undefined
+              : 'Leave empty for a 1-day leave on the start date.'
+          }
         />
       </div>
 
       {/* Live duration calculation & Sunday exclusion callout */}
-      {startDate && endDate && (
+      {startDate && (
         <div
           className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm ${
             isInvalidSelection
@@ -206,10 +256,15 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-indigo-600 shrink-0" />
-              <span className="font-semibold">Calculated Leave Duration:</span>
+              <span className="font-semibold">Calculated Duration:</span>
               <span className="font-bold text-base">
                 {workingDays} {workingDays === 1 ? 'Working Day' : 'Working Days'}
               </span>
+              {isSingleDay && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-800 font-medium">
+                  Single Day
+                </span>
+              )}
             </div>
             {sundaysExcluded > 0 && (
               <p className="text-xs text-indigo-700/80 pl-6">
@@ -231,7 +286,7 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
         label="Reason for Leave"
         required
         rows={3}
-        placeholder="Please specify the reason for your leave (e.g. personal appointment, family function, medical)..."
+        placeholder="Please specify why you are requesting this leave (e.g., family function, personal work, medical)..."
         value={reason}
         error={errors.reason}
         onChange={(e) => {
