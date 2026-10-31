@@ -247,37 +247,57 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       {/* Live duration calculation & Sunday exclusion callout */}
       {startDate && (
         <div
-          className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm ${
+          className={`p-4 sm:p-5 rounded-2xl border transition-all ${
             isInvalidSelection
-              ? 'bg-rose-50 border-rose-200 text-rose-900'
-              : 'bg-indigo-50 border-indigo-200 text-indigo-900'
+              ? 'bg-rose-50/90 border-rose-200 text-rose-950'
+              : 'bg-gradient-to-br from-indigo-50/80 via-white to-indigo-50/40 border-indigo-200/90 text-slate-900 shadow-xs'
           }`}
         >
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-indigo-600 shrink-0" />
-              <span className="font-semibold">Calculated Duration:</span>
-              <span className="font-bold text-base">
-                {workingDays} {workingDays === 1 ? 'Working Day' : 'Working Days'}
-              </span>
-              {isSingleDay && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-800 font-medium">
-                  Single Day
-                </span>
-              )}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Left Column: Duration details */}
+            <div className="flex items-start gap-3.5">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                  isInvalidSelection
+                    ? 'bg-rose-100 text-rose-600'
+                    : 'bg-indigo-100 text-indigo-600'
+                }`}
+              >
+                <Clock className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Calculated Duration
+                  </span>
+                  {isSingleDay && (
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200/80">
+                      Single Day
+                    </span>
+                  )}
+                </div>
+                <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                  {workingDays}{' '}
+                  <span className="text-sm font-semibold text-slate-600 font-normal">
+                    {workingDays === 1 ? 'Working Day' : 'Working Days'}
+                  </span>
+                </div>
+                {sundaysExcluded > 0 && (
+                  <p className="text-xs font-medium text-indigo-700 pt-0.5">
+                    * Note: {sundaysExcluded} Sunday excluded (non-working day, 0 days deducted).
+                  </p>
+                )}
+              </div>
             </div>
-            {sundaysExcluded > 0 && (
-              <p className="text-xs text-indigo-700/80 pl-6">
-                * Note: {sundaysExcluded} Sunday excluded (non-working day, 0 days deducted).
-              </p>
-            )}
-          </div>
 
-          <div className="text-right sm:border-l sm:border-indigo-200 sm:pl-4">
-            <span className="text-xs font-medium text-slate-500 block">Available Quota</span>
-            <span className="font-bold text-sm text-slate-800">
-              {availableBalance} Days
-            </span>
+            {/* Right Column: Available Quota */}
+            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-slate-200/80 pt-3 sm:pt-0 sm:pl-6 shrink-0">
+              <span className="text-xs font-medium text-slate-500">Available Quota</span>
+              <div className="text-lg sm:text-xl font-bold text-slate-800">
+                {availableBalance}{' '}
+                <span className="text-xs font-medium text-slate-500">Days</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -107,7 +107,7 @@ export const EmployeeDashboardPage: React.FC = () => {
         onClose={handleCloseDrawer}
         title="Apply for Leave"
         description="Select your requested dates. End date is optional for a 1-day leave."
-        maxWidth="xl"
+        maxWidth="2xl"
       >
         <LeaveRequestForm
           availableBalance={balance.availableLeave}
