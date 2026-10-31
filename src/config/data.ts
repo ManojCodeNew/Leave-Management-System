@@ -1,5 +1,5 @@
-export const APP_NAME = 'Exelon LMS';
-export const APP_DESCRIPTION = 'Exelon Leave Management System';
+export const APP_NAME = 'LeaveMate';
+export const APP_DESCRIPTION = 'Enterprise Leave Management System';
 
 export const LEAVE_STATUS_OPTIONS = [
   { value: 'ALL', label: 'All Statuses' },

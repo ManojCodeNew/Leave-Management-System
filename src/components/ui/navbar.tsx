@@ -21,11 +21,22 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/employee/dashboard')}>
-            <img src={IMAGES.IMG_APP_LOGO} alt="App Logo" className="w-9 h-9" />
-            <div>
-              <span className="text-lg font-bold text-slate-900 tracking-tight">{APP_NAME}</span>
-              <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <div
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group"
+            onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/employee/dashboard')}
+          >
+            <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+              <img
+                src={IMAGES.IMG_APP_ICON}
+                alt="LeaveMate Logo"
+                className="w-full h-full object-contain filter drop-shadow-xs transition-transform group-hover:scale-105"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">
+                {APP_NAME}
+              </span>
+              <span className="hidden sm:inline-flex text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                 {isAdmin ? 'Admin Portal' : 'Employee Portal'}
               </span>
             </div>

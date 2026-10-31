@@ -42,13 +42,23 @@ export const LoginPage: React.FC = () => {
         {/* Decorative Top Accent */}
         <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700" />
 
-        {/* Header */}
-        <div className="text-center space-y-2 mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-indigo-50 rounded-2xl mb-1 border border-indigo-100 shadow-xs">
-            <img src={IMAGES.IMG_APP_LOGO} alt="App Logo" className="w-10 h-10" />
+        {/* Header Logo & Brand */}
+        <div className="text-center space-y-3 mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-50/80 via-white to-indigo-50/50 rounded-3xl p-3.5 border border-indigo-100 shadow-xs mx-auto">
+            <img
+              src={IMAGES.IMG_APP_ICON}
+              alt="LeaveMate Icon"
+              className="w-full h-full object-contain filter drop-shadow-xs"
+            />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{APP_NAME}</h1>
-          <p className="text-xs text-slate-500">{APP_DESCRIPTION}</p>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              {APP_NAME}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              {APP_DESCRIPTION}
+            </p>
+          </div>
         </div>
 
         {/* Error notification */}
