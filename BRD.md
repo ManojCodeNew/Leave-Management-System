@@ -136,6 +136,20 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 - **Organizational KPI Cards**: Live metrics for Total Employees, Total Requests, Pending Requests, Approved Requests, Rejected Requests, and Total Leave Days Taken.
 - **Employee Directory**: Complete roster of all employees with allocated quotas, used days, available balances, and request counts.
 
+### 4.11 Debounced Search Engine
+- Search inputs across employee leave history, admin leave management, and employee directories incorporate client-side debouncing (400ms delay).
+- Ensures network requests are throttled while users type, triggering server evaluation only after typing pauses.
+
+### 4.12 API Pagination Metadata & TanStack Infinite Scroll
+- All listing endpoints (`/api/leaves`, `/api/admin/leaves`, `/api/admin/employees`) emit comprehensive pagination metadata:
+  - `totalCount`: Aggregate number of matching records in the database.
+  - `totalPages`: Total computed pages according to requested limit.
+  - `currentPage`: Current page index.
+  - `limit`: Records per page.
+  - `hasNextPage`: Boolean indicating if subsequent records exist.
+  - `hasPrevPage`: Boolean indicating if preceding records exist.
+- Frontend queries consume TanStack Query's `useInfiniteQuery` hooked into an `IntersectionObserver` sentinel. As users scroll toward the bottom of the table, subsequent pages are automatically loaded and appended without full page reloads.
+
 ---
 
 ## 5. Non-Functional Requirements
@@ -201,6 +215,8 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 | **AC-14** | Admin dashboard displays real-time KPI metrics and directory | Admin Dashboard Integration Test | **PASSED** |
 | **AC-15** | Role-based route guards prevent unauthorized navigation | Navigation Guard Test | **PASSED** |
 | **AC-16** | Zero TypeScript or Vite compilation errors on production build | `npm run build` Execution | **PASSED** |
+| **AC-17** | Search inputs debounce keystrokes by 400ms before querying API | Input & Network Monitor Test | **PASSED** |
+| **AC-18** | APIs emit metadata and TanStack `useInfiniteQuery` loads pages on scroll | Infinite Scroll & API Meta Test | **PASSED** |
 
 ---
 

@@ -128,6 +128,14 @@ In traditional enterprise settings, leave tracking is often fragmented across em
 - **Organizational Analytics**: Real-time KPI cards for Total Employees, Total Requests, Pending Requests, Approved Requests, Rejected Requests, and Total Leave Days Taken.
 - **Workforce Directory**: Searchable, paginated table of all registered employees, departments, quotas, used days, available balances, and request breakdowns.
 
+### 11. 🔍 Debounced Search Optimization
+- Real-time search inputs on leaves and employee lists leverage a custom `useDebounce` hook (400ms delay).
+- Prevents redundant network queries while the user is actively typing, firing API requests only after input has settled.
+
+### 12. 📜 TanStack useInfiniteQuery & Automatic Scroll-to-Load
+- Listing endpoints (`/api/leaves`, `/api/admin/leaves`, `/api/admin/employees`) return standardized pagination metadata (`totalCount`, `totalPages`, `currentPage`, `limit`, `hasNextPage`, `hasPrevPage`).
+- Frontend queries consume TanStack Query's `useInfiniteQuery` paired with an `IntersectionObserver` sentinel. As the user scrolls down the page, subsequent pages are automatically loaded and seamlessly appended with an animated loader indicator.
+
 ---
 
 ## 🏗️ System Architecture & Data Flow
