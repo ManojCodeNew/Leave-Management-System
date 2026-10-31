@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
  * @param value The raw value to debounce
  * @param delay Milliseconds to delay before updating the debounced value (default 400ms)
  */
-export function useDebounce<T>(value: T, delay: number = 400): T {
+export function useDebounce<T>(value: T, delay: number = 500): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
