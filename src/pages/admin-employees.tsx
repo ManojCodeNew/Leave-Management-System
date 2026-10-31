@@ -5,32 +5,41 @@ import AppInput from '../components/ui/inputs/app-input';
 import EmptyState from '../components/ui/empty-state';
 import LoadingSpinner from '../components/ui/loading-spinner';
 import { useInfiniteAdminEmployees } from '../hooks/use-admin';
-import { useDebounce } from '../hooks/use-debounce';
 import { useInfiniteScroll } from '../hooks/use-infinite-scroll';
 
 export const AdminEmployeesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 400ms search debouncing for optimal backend query performance
-  const debouncedSearch = useDebounce(searchTerm, 400);
-
+  // Fetch paginated employees without firing API requests on every search keystroke
   const {
     data,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useInfiniteAdminEmployees(debouncedSearch, 10);
+  } = useInfiniteAdminEmployees('', 15);
 
   const employees = useMemo(
     () => data?.pages.flatMap((page) => page.items) || [],
     [data]
   );
 
-  const totalCount = data?.pages[0]?.meta?.totalCount ?? employees.length;
-  const totalPages = data?.pages[0]?.meta?.totalPages ?? 1;
+  // Instant client-side search filtering on the received list
+  const filteredEmployees = useMemo(() => {
+    const q = searchTerm.toLowerCase().trim();
+    if (!q) return employees;
+    return employees.filter(
+      (emp) =>
+        emp.name.toLowerCase().includes(q) ||
+        emp.email.toLowerCase().includes(q) ||
+        emp.department.toLowerCase().includes(q) ||
+        emp.employeeId.toLowerCase().includes(q)
+    );
+  }, [employees, searchTerm]);
 
-  // Infinite scroll trigger
+  const totalCount = data?.pages[0]?.meta?.totalCount ?? employees.length;
+
+  // Infinite scroll trigger on page scroll
   const loadMoreRef = useInfiniteScroll({
     hasNextPage,
     isFetchingNextPage,
@@ -55,13 +64,13 @@ export const AdminEmployeesPage: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Organization Employees</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Overview of all registered staff members, departments, and leave balance allocations with infinite scroll.
+              Overview of all registered staff members, departments, and leave balance allocations with instant filtering and scroll loading.
             </p>
           </div>
 
           <div className="w-full sm:w-80">
             <AppInput
-              placeholder="Search by name, email, department (debounced)..."
+              placeholder="Filter by name, email, department..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               icon={<Search className="w-4 h-4" />}
@@ -72,20 +81,26 @@ export const AdminEmployeesPage: React.FC = () => {
         {/* Counter Header */}
         <div className="flex items-center justify-between text-xs text-slate-500 px-1">
           <span>
-            Showing <strong className="text-slate-800">{employees.length}</strong> of{' '}
-            <strong className="text-slate-800">{totalCount}</strong> employees
+            Showing <strong className="text-slate-800">{filteredEmployees.length}</strong>
+            {searchTerm ? ` matching "${searchTerm}"` : ''} of{' '}
+            <strong className="text-slate-800">{employees.length}</strong> loaded employees
+            {totalCount > employees.length && ` (${totalCount} total in system)`}
           </span>
-          {totalPages > 1 && (
-            <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
-              Page 1 to {Math.ceil(employees.length / 10) || 1} of {totalPages}
+          {hasNextPage && (
+            <span className="text-indigo-600 font-medium">
+              Scroll down to auto-load more
             </span>
           )}
         </div>
 
-        {employees.length === 0 ? (
+        {filteredEmployees.length === 0 ? (
           <EmptyState
             title="No Employees Found"
-            description="No employee records match your search criteria."
+            description={
+              searchTerm
+                ? `No employees match "${searchTerm}". Try clearing your filter.`
+                : 'No employee records found in system.'
+            }
           />
         ) : (
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
@@ -103,7 +118,7 @@ export const AdminEmployeesPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {employees.map((emp) => (
+                  {filteredEmployees.map((emp) => (
                     <tr key={emp.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-4 px-4 sm:px-6 font-mono text-xs font-bold text-slate-600">
                         {emp.employeeId}

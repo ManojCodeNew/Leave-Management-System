@@ -72,12 +72,8 @@ export const LeaveHistoryTable: React.FC<LeaveHistoryTableProps> = ({
     [onSearchChange]
   );
 
-  // If client-side search is needed as fallback (e.g. on dashboard where full list was passed)
+  // Instant client-side search filtering on the loaded list (no network call, no loading spinner)
   const displayedLeaves = useMemo(() => {
-    if (onLoadMore) {
-      // In paginated mode, backend handles filtering
-      return leaves;
-    }
     const q = search.toLowerCase().trim();
     return leaves.filter((l) => {
       const statusMatch =
@@ -86,10 +82,11 @@ export const LeaveHistoryTable: React.FC<LeaveHistoryTableProps> = ({
       if (!q) return true;
       return (
         l.reason?.toLowerCase().includes(q) ||
-        formatDate(l.startDate).toLowerCase().includes(q)
+        formatDate(l.startDate).toLowerCase().includes(q) ||
+        formatDate(l.endDate).toLowerCase().includes(q)
       );
     });
-  }, [leaves, filter, search, onLoadMore]);
+  }, [leaves, filter, search]);
 
   return (
     <div className="space-y-4 text-left">

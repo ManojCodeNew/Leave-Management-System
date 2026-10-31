@@ -3,23 +3,20 @@ import Navbar from '../components/ui/navbar';
 import AdminLeavesTable from '../components/admin-dashboard/admin-leaves-table';
 import LoadingSpinner from '../components/ui/loading-spinner';
 import { useInfiniteAdminLeaves } from '../hooks/use-admin';
-import { useDebounce } from '../hooks/use-debounce';
 import { LeaveStatus } from '../types/leave.types';
 
 export const AdminLeavesPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<LeaveStatus | 'ALL'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 400ms search debouncing to optimize backend queries
-  const debouncedSearchTerm = useDebounce(searchTerm, 400);
-
+  // Fetch paginated leaves without firing API calls on search keystrokes
   const {
     data,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useInfiniteAdminLeaves(statusFilter, debouncedSearchTerm, 10);
+  } = useInfiniteAdminLeaves(statusFilter, '', 15);
 
   const leaves = useMemo(
     () => data?.pages.flatMap((page) => page.items) || [],
@@ -47,7 +44,7 @@ export const AdminLeavesPage: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Leave Management</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Review, approve, and reject organization-wide employee leave requests with infinite scroll.
+              Review, approve, and reject organization-wide employee leave requests with instant client search and scroll loading.
             </p>
           </div>
           <div className="flex items-center gap-2">

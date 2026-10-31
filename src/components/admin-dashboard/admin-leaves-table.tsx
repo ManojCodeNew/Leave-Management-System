@@ -75,6 +75,29 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
     [onSearchChange]
   );
 
+  // Instant client-side search filtering on loaded list (no API roundtrip, no loading spinner)
+  const filteredLeaves = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return leaves;
+
+    return leaves.filter((leave) => {
+      const empObj = typeof leave.employee === 'object' ? leave.employee : null;
+      const empName = empObj?.name?.toLowerCase() || '';
+      const empEmail = empObj?.email?.toLowerCase() || '';
+      const empCode = empObj?.employeeId?.toLowerCase() || '';
+      const reason = leave.reason?.toLowerCase() || '';
+      const dept = empObj?.department?.toLowerCase() || '';
+
+      return (
+        empName.includes(q) ||
+        empEmail.includes(q) ||
+        empCode.includes(q) ||
+        dept.includes(q) ||
+        reason.includes(q)
+      );
+    });
+  }, [leaves, search]);
+
   const handleOpenActionModal = useCallback(
     (leave: LeaveApplication, type: 'APPROVE' | 'REJECT') => {
       setSelectedLeave(leave);
@@ -120,7 +143,7 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
       <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="w-full sm:w-80">
           <AppInput
-            placeholder="Search employee, email, reason (debounced)..."
+            placeholder="Filter by employee, email, reason..."
             value={search}
             onChange={handleSearchChange}
             icon={<Search className="w-4 h-4" />}
@@ -136,24 +159,30 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
         </div>
       </div>
 
-      {/* Pagination Status Counter */}
+      {/* Pagination & Filter Status Counter */}
       <div className="flex items-center justify-between text-xs text-slate-500 px-1">
         <span>
-          Showing <strong className="text-slate-800">{leaves.length}</strong> of{' '}
-          <strong className="text-slate-800">{totalCount}</strong> applications
+          Showing <strong className="text-slate-800">{filteredLeaves.length}</strong>
+          {search ? ` matching "${search}"` : ''} of{' '}
+          <strong className="text-slate-800">{leaves.length}</strong> loaded requests
+          {totalCount > leaves.length && ` (${totalCount} total)`}
         </span>
-        {totalPages > 1 && (
-          <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
-            Page 1 to {Math.ceil(leaves.length / 10) || 1} of {totalPages}
+        {hasNextPage && (
+          <span className="text-indigo-600 font-medium">
+            Scroll down to load more
           </span>
         )}
       </div>
 
       {/* Table */}
-      {leaves.length === 0 ? (
+      {filteredLeaves.length === 0 ? (
         <EmptyState
           title="No Leave Records Found"
-          description="Try adjusting your search criteria or status filter to see other records."
+          description={
+            search
+              ? `No loaded records match "${search}". Try clearing your filter.`
+              : 'Try adjusting your status filter to see other records.'
+          }
         />
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
@@ -171,7 +200,7 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {leaves.map((leave) => {
+                {filteredLeaves.map((leave) => {
                   const empObj = typeof leave.employee === 'object' ? leave.employee : null;
                   const empName = empObj?.name || 'Unknown';
                   const empEmail = empObj?.email || '';

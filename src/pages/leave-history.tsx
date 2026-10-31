@@ -14,9 +14,7 @@ export const LeaveHistoryPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<LeaveStatus | 'ALL'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 400ms debounced search
-  const debouncedSearch = useDebounce(searchTerm, 400);
-
+  // Fetch paginated history without triggering API calls on typing
   const {
     data,
     isLoading,
@@ -25,7 +23,7 @@ export const LeaveHistoryPage: React.FC = () => {
     hasNextPage,
     fetchNextPage,
     refetch,
-  } = useInfiniteMyLeaves(statusFilter, debouncedSearch, 10);
+  } = useInfiniteMyLeaves(statusFilter, '', 15);
 
   const leaves = useMemo(
     () => data?.pages.flatMap((page) => page.items) || [],
