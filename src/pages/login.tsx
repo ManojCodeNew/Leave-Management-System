@@ -98,8 +98,9 @@ export const LoginPage: React.FC = () => {
               fullWidth
               size="medium"
               isLoading={isLoading}
+              disabled={isLoading}
             >
-              Sign In to Account
+              {isLoading ? 'Signing In...' : 'Sign In to Account'}
             </AppButton>
           </div>
         </form>

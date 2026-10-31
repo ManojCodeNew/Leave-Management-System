@@ -155,6 +155,21 @@ export const createLeave = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // Duplicate submission guard: prevent identical pending applications
+    const duplicatePending = await LeaveApplication.findOne({
+      employee: employeeId,
+      status: 'PENDING',
+      startDate: start,
+      endDate: end,
+    });
+    if (duplicatePending) {
+      res.status(409).json({
+        success: false,
+        message: 'An identical pending leave application for these dates is already awaiting review.',
+      });
+      return;
+    }
+
     const newLeave = await LeaveApplication.create({
       employee: employeeId,
       startDate: start,

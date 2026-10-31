@@ -321,9 +321,13 @@ export const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           type="submit"
           variant="primary"
           isLoading={applyLeaveMutation.isPending}
-          disabled={isInvalidSelection || availableBalance <= 0}
+          disabled={isInvalidSelection || availableBalance <= 0 || !!successMessage}
         >
-          Submit Application
+          {successMessage
+            ? 'Application Submitted!'
+            : applyLeaveMutation.isPending
+            ? 'Submitting Application...'
+            : 'Submit Application'}
         </AppButton>
       </div>
     </form>

@@ -273,9 +273,12 @@ export const AdminLeavesTable: React.FC<AdminLeavesTableProps> = ({
               variant={actionType === 'APPROVE' ? 'success' : 'danger'}
               size="small"
               isLoading={approveMutation.isPending || rejectMutation.isPending}
+              disabled={approveMutation.isPending || rejectMutation.isPending}
               onClick={handleConfirmAction}
             >
-              Confirm {actionType === 'APPROVE' ? 'Approval' : 'Rejection'}
+              {approveMutation.isPending || rejectMutation.isPending
+                ? 'Processing...'
+                : `Confirm ${actionType === 'APPROVE' ? 'Approval' : 'Rejection'}`}
             </AppButton>
           </div>
         </div>

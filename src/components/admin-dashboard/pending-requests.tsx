@@ -222,9 +222,12 @@ export const PendingRequests: React.FC<PendingRequestsProps> = ({ pendingLeaves 
               variant={actionType === 'APPROVE' ? 'success' : 'danger'}
               size="small"
               isLoading={isPendingAction}
+              disabled={isPendingAction}
               onClick={handleConfirmAction}
             >
-              Confirm {actionType === 'APPROVE' ? 'Approval' : 'Rejection'}
+              {isPendingAction
+                ? 'Processing...'
+                : `Confirm ${actionType === 'APPROVE' ? 'Approval' : 'Rejection'}`}
             </AppButton>
           </div>
         </div>
