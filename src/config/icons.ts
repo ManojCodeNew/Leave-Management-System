@@ -1,0 +1,38 @@
+import {
+  Calendar,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  User,
+  Users,
+  LogOut,
+  PlusCircle,
+  History,
+  LayoutDashboard,
+  ShieldCheck,
+  FileText,
+  ChevronRight,
+  Search,
+  Filter,
+} from 'lucide-react';
+
+export const ICONS = {
+  calendar: Calendar,
+  clock: Clock,
+  approved: CheckCircle2,
+  rejected: XCircle,
+  pending: AlertCircle,
+  user: User,
+  users: Users,
+  logout: LogOut,
+  plus: PlusCircle,
+  history: History,
+  dashboard: LayoutDashboard,
+  shield: ShieldCheck,
+  file: FileText,
+  chevronRight: ChevronRight,
+  search: Search,
+  filter: Filter,
+};
+
