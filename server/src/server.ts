@@ -19,6 +19,7 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://leavemanagementsystemtask.vercel.app',
   process.env.CLIENT_URL,
 ].filter(Boolean) as string[];
 
