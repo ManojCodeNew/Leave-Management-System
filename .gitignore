@@ -1,0 +1,53 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+server/node_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Build outputs
+dist/
+dist-ssr/
+server/dist/
+*.local
+
+# Environment variables
+.env
+.env.production
+.env.local
+server/.env
+server/.env.production
+server/.env.local
+!.env.example
+!server/.env.example
+doc
+
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
