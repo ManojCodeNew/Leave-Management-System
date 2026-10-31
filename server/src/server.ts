@@ -56,7 +56,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
     database: isDbConnected ? 'connected' : 'disconnected',
     message: isDbConnected
       ? 'Leave Management System API is healthy and connected to MongoDB.'
-      : 'API is running but MongoDB is not connected. Please check MONGODB_URI and MongoDB Atlas Network Access (IP Whitelist 0.0.0.0/0).',
+      : 'API is running but MongoDB is not connected. Please check MONGODB_URI.',
     timestamp: new Date().toISOString(),
   });
 });
@@ -68,7 +68,7 @@ app.use('/api', (req, res, next) => {
     return res.status(503).json({
       success: false,
       message:
-        'Database connection unavailable. In MongoDB Atlas, go to "Network Access" and ensure IP 0.0.0.0/0 (Allow Access from Anywhere) is added, and verify MONGODB_URI in your cloud environment variables.',
+        'Database connection unavailable.',
     });
   }
   next();
