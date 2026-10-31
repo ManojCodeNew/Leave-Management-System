@@ -16,7 +16,7 @@ The application is deployed and hosted on high-availability cloud infrastructure
 
 | Component | Hosting Platform | Live URL / Endpoint | Status |
 |---|---|---|:---:|
-| **Frontend Web App** | **Vercel** (Global Edge CDN) | [https://leave-management-system-delta-ruddy.vercel.app/](https://leave-management-system-delta-ruddy.vercel.app/) | 🟢 Live |
+| **Frontend Web App** | **Vercel** (Global Edge CDN) | https://leavemanagementsystemtask.vercel.app/ | 🟢 Live |
 | **Backend REST API** | **Render** (Containerized Node.js Web Service) | [https://leave-management-system-5iol.onrender.com](https://leave-management-system-5iol.onrender.com) | 🟢 Live |
 | **Cloud Database** | **MongoDB Atlas Cloud** | Multi-Region M0 Replica Cluster | 🟢 Connected |
 
@@ -678,3 +678,13 @@ Both Vercel and Render support automated Continuous Deployment (CD):
 - **Solution**: Kill the existing process holding port 5000:
   - *Windows (PowerShell)*: `Get-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess | Stop-Process -Force`
   - *macOS / Linux*: `lsof -ti:5000 | xargs kill -9`
+
+---
+
+## Thank You for Visiting!
+
+Thank you for taking the time to explore this project. I hope you find it useful and easy to understand.
+
+Your feedback and suggestions are always welcome!
+
+**Made with ❤️ by Manoj C.**
