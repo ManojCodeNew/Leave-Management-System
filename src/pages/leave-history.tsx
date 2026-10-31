@@ -9,7 +9,12 @@ import { useMyLeaves } from '../hooks/use-leave';
 
 export const LeaveHistoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data: leaves = [], isLoading } = useMyLeaves();
+  const {
+    data: leaves = [],
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useMyLeaves();
 
   if (isLoading) {
     return (
@@ -52,12 +57,16 @@ export const LeaveHistoryPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Full Table */}
-        <LeaveHistoryTable leaves={leaves} />
+        {/* Full Table with Refresh Option */}
+        <LeaveHistoryTable
+          leaves={leaves}
+          isLoading={isLoading}
+          onRefresh={refetch}
+          isRefreshing={isRefetching}
+        />
       </main>
     </div>
   );
 };
 
 export default LeaveHistoryPage;
-

@@ -3,16 +3,58 @@ import { LeaveApplication } from '../models/leave-application.model.js';
 import { User } from '../models/user.model.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 
-// Helper to calculate days between dates inclusive
-export const calculateDuration = (startDate: string | Date, endDate: string | Date): number => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
+// Convert date string (YYYY-MM-DD) to UTC Start of Day (00:00:00.000)
+export const parseUTCStartOfDay = (dateInput: string | Date): Date => {
+  const dateStr =
+    typeof dateInput === 'string'
+      ? dateInput.split('T')[0]
+      : dateInput.toISOString().split('T')[0];
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+};
 
-  const diffTime = end.getTime() - start.getTime();
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays;
+// Convert date string (YYYY-MM-DD) to UTC End of Day (23:59:59.999)
+export const parseUTCEndOfDay = (dateInput: string | Date): Date => {
+  const dateStr =
+    typeof dateInput === 'string'
+      ? dateInput.split('T')[0]
+      : dateInput.toISOString().split('T')[0];
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+};
+
+// Calculate leave days between start and end dates inclusive, strictly excluding Sundays
+export const calculateDurationExcludingSundays = (
+  startDate: string | Date,
+  endDate: string | Date
+): { duration: number; sundayCount: number } => {
+  const start = parseUTCStartOfDay(startDate);
+  const end = parseUTCEndOfDay(endDate);
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+    return { duration: 0, sundayCount: 0 };
+  }
+
+  let duration = 0;
+  let sundayCount = 0;
+  const current = new Date(start);
+
+  while (current <= end) {
+    if (current.getUTCDay() === 0) {
+      // 0 represents Sunday in UTC: non-working day
+      sundayCount++;
+    } else {
+      // Monday through Saturday are eligible working days
+      duration++;
+    }
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+
+  return { duration, sundayCount };
+};
+
+export const calculateDuration = (startDate: string | Date, endDate: string | Date): number => {
+  return calculateDurationExcludingSundays(startDate, endDate).duration;
 };
 
 export const createLeave = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -28,8 +70,8 @@ export const createLeave = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = parseUTCStartOfDay(startDate);
+    const end = parseUTCEndOfDay(endDate);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       res.status(400).json({
@@ -47,11 +89,47 @@ export const createLeave = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const duration = calculateDuration(start, end);
+    // Requirement: Sunday Restrictions
+    if (start.getUTCDay() === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'Leave start date cannot be a Sunday. Sundays are non-working days.',
+      });
+      return;
+    }
+
+    if (end.getUTCDay() === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'Leave end date cannot be a Sunday. Sundays are non-working days.',
+      });
+      return;
+    }
+
+    // Requirement: Exclude Sundays from requested duration
+    const { duration, sundayCount } = calculateDurationExcludingSundays(start, end);
     if (duration <= 0) {
       res.status(400).json({
         success: false,
-        message: 'Leave duration must be at least 1 day.',
+        message: 'Requested leave range contains zero working days (excluding Sundays).',
+      });
+      return;
+    }
+
+    // Requirement: Prevent Overlapping with Approved Leave Applications
+    const overlappingApproved = await LeaveApplication.findOne({
+      employee: employeeId,
+      status: 'APPROVED',
+      startDate: { $lte: end },
+      endDate: { $gte: start },
+    });
+
+    if (overlappingApproved) {
+      const startStr = overlappingApproved.startDate.toISOString().split('T')[0];
+      const endStr = overlappingApproved.endDate.toISOString().split('T')[0];
+      res.status(400).json({
+        success: false,
+        message: `The selected dates overlap with an existing approved leave application (${startStr} to ${endStr}). Applications overlapping with approved leaves are not allowed.`,
       });
       return;
     }
@@ -69,7 +147,7 @@ export const createLeave = async (req: AuthRequest, res: Response): Promise<void
     if (duration > employee.availableLeave) {
       res.status(400).json({
         success: false,
-        message: `Requested duration of ${duration} day(s) exceeds your available leave balance of ${employee.availableLeave} day(s).`,
+        message: `Requested duration of ${duration} working day(s) exceeds your available leave balance of ${employee.availableLeave} day(s).`,
       });
       return;
     }
@@ -88,7 +166,9 @@ export const createLeave = async (req: AuthRequest, res: Response): Promise<void
 
     res.status(201).json({
       success: true,
-      message: 'Leave application submitted successfully.',
+      message: `Leave application submitted successfully for ${duration} working day(s)${
+        sundayCount > 0 ? ` (${sundayCount} Sunday excluded)` : ''
+      }.`,
       data: newLeave,
     });
   } catch (error: any) {
@@ -182,6 +262,12 @@ export const getMyBalance = async (req: AuthRequest, res: Response): Promise<voi
 
     const pendingDays = pendingLeaves.reduce((acc, curr) => acc + curr.duration, 0);
 
+    // Fetch approved leaves for date disabling in frontend calendar
+    const approvedLeaves = await LeaveApplication.find({
+      employee: employeeId,
+      status: 'APPROVED',
+    }).select('startDate endDate duration reason');
+
     // Get recent leave applications (last 5)
     const recentLeaves = await LeaveApplication.find({ employee: employeeId })
       .sort({ appliedAt: -1 })
@@ -205,6 +291,13 @@ export const getMyBalance = async (req: AuthRequest, res: Response): Promise<voi
           pendingRequestsCount: pendingLeaves.length,
         },
         recentApplications: recentLeaves,
+        approvedLeaves: approvedLeaves.map((l) => ({
+          _id: l._id,
+          startDate: l.startDate,
+          endDate: l.endDate,
+          duration: l.duration,
+          reason: l.reason,
+        })),
       },
     });
   } catch (error: any) {
@@ -214,4 +307,3 @@ export const getMyBalance = async (req: AuthRequest, res: Response): Promise<voi
     });
   }
 };
-

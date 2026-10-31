@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { setCredentials, logoutAction, setAuthError } from '../redux/slices/auth.slice';
 import { authService } from '../services/auth.service';
+import { queryClient } from '../config/query-client';
 import { LoginCredentials } from '../types/auth.types';
 
 export const useAuth = () => {
@@ -18,6 +19,9 @@ export const useAuth = () => {
     dispatch(setAuthError(null));
 
     try {
+      // Clear any cached query data from a previously active user session
+      queryClient.clear();
+
       const data = await authService.login(credentials);
       dispatch(setCredentials({ user: data.user, token: data.token }));
 
@@ -39,6 +43,8 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
+      // Clear TanStack Query server cache immediately
+      queryClient.clear();
       await authService.logout();
     } catch (e) {
       console.warn('Logout error ignored:', e);
@@ -61,3 +67,4 @@ export const useAuth = () => {
   };
 };
 
+export default useAuth;

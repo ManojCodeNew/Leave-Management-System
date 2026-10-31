@@ -130,6 +130,25 @@ export const approveLeave = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    // Ensure no overlapping approved leave exists for this employee
+    const overlapping = await LeaveApplication.findOne({
+      _id: { $ne: leave._id },
+      employee: leave.employee,
+      status: 'APPROVED',
+      startDate: { $lte: leave.endDate },
+      endDate: { $gte: leave.startDate },
+    });
+
+    if (overlapping) {
+      const s = overlapping.startDate.toISOString().split('T')[0];
+      const e = overlapping.endDate.toISOString().split('T')[0];
+      res.status(400).json({
+        success: false,
+        message: `Cannot approve leave. It overlaps with an already approved leave (${s} to ${e}).`,
+      });
+      return;
+    }
+
     // Deduct leave balance accurately
     employee.usedLeave += leave.duration;
     employee.availableLeave = Math.max(0, employee.leaveAllocation - employee.usedLeave);

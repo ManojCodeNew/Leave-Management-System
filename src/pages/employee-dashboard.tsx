@@ -13,8 +13,13 @@ export const EmployeeDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
-  const { data: balanceData, isLoading: isBalanceLoading, error: balanceError } = useLeaveBalance();
-  const { data: leaves = [], isLoading: isLeavesLoading } = useMyLeaves();
+  const { data: balanceData, isLoading: isBalanceLoading } = useLeaveBalance();
+  const {
+    data: leaves = [],
+    isLoading: isLeavesLoading,
+    isRefetching: isLeavesRefetching,
+    refetch: refetchLeaves,
+  } = useMyLeaves();
 
   if (isBalanceLoading) {
     return (
@@ -34,6 +39,7 @@ export const EmployeeDashboardPage: React.FC = () => {
   };
 
   const recentApps = balanceData?.recentApplications || leaves.slice(0, 5);
+  const approvedLeaves = balanceData?.approvedLeaves || [];
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
@@ -53,8 +59,13 @@ export const EmployeeDashboardPage: React.FC = () => {
           onOpenApplyModal={() => setIsApplyModalOpen(true)}
         />
 
-        {/* History Table */}
-        <LeaveHistoryTable leaves={leaves} isLoading={isLeavesLoading} />
+        {/* History Table with Refresh Option */}
+        <LeaveHistoryTable
+          leaves={leaves}
+          isLoading={isLeavesLoading}
+          onRefresh={refetchLeaves}
+          isRefreshing={isLeavesRefetching}
+        />
       </main>
 
       {/* Quick Apply Leave Modal */}
@@ -63,9 +74,11 @@ export const EmployeeDashboardPage: React.FC = () => {
         onClose={() => setIsApplyModalOpen(false)}
         title="Submit Leave Application"
         description="Select your requested dates and submit for manager approval."
+        maxWidth="lg"
       >
         <LeaveRequestForm
           availableBalance={balance.availableLeave}
+          approvedLeaves={approvedLeaves}
           onSuccess={() => setIsApplyModalOpen(false)}
         />
       </AppModal>
@@ -74,4 +87,3 @@ export const EmployeeDashboardPage: React.FC = () => {
 };
 
 export default EmployeeDashboardPage;
-

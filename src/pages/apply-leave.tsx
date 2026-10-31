@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import Navbar from '../components/ui/navbar';
 import LeaveRequestForm from '../components/employee-dashboard/leave-request-form';
-import AppButton from '../components/ui/buttons/app-button';
 import LoadingSpinner from '../components/ui/loading-spinner';
 import { useLeaveBalance } from '../hooks/use-leave';
 
@@ -21,6 +20,7 @@ export const ApplyLeavePage: React.FC = () => {
   }
 
   const availableBalance = data?.balance?.availableLeave ?? 20;
+  const approvedLeaves = data?.approvedLeaves || [];
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
@@ -62,17 +62,27 @@ export const ApplyLeavePage: React.FC = () => {
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
           <LeaveRequestForm
             availableBalance={availableBalance}
+            approvedLeaves={approvedLeaves}
             onSuccess={() => navigate('/employee/history')}
           />
         </div>
 
         {/* Policy Notice */}
-        <div className="bg-slate-100/70 p-4 rounded-2xl border border-slate-200 text-left text-xs text-slate-500 space-y-1">
-          <p className="font-semibold text-slate-700">Company Leave Guidelines:</p>
-          <ul className="list-disc pl-4 space-y-0.5">
-            <li>Submitted leaves are placed under PENDING status until reviewed.</li>
-            <li>Approved leave days will automatically be deducted from your leave balance.</li>
-            <li>Rejected leaves will not affect your available leave balance.</li>
+        <div className="bg-slate-100/70 p-5 rounded-2xl border border-slate-200 text-left text-xs text-slate-600 space-y-2">
+          <p className="font-bold text-slate-800">Company Leave Guidelines & Rules:</p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>
+              <strong>Sunday Exclusion:</strong> Sundays are non-working days. They are excluded from duration calculations (0 days deducted) and cannot be selected as start or end dates.
+            </li>
+            <li>
+              <strong>Saturday Eligibility:</strong> Saturdays are standard eligible working days.
+            </li>
+            <li>
+              <strong>No Overlap with Approved Leaves:</strong> Applications cannot overlap (partially or fully) with dates already approved for your account.
+            </li>
+            <li>
+              <strong>Approval & Balance:</strong> Approved leaves deduct from your balance; rejected leaves preserve your balance intact.
+            </li>
           </ul>
         </div>
       </main>
@@ -81,4 +91,3 @@ export const ApplyLeavePage: React.FC = () => {
 };
 
 export default ApplyLeavePage;
-

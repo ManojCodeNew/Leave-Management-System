@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Filter, FileText } from 'lucide-react';
+import { Calendar, Filter, FileText, RotateCw } from 'lucide-react';
 import { LeaveApplication, LeaveStatus } from '../../types/leave.types';
 import StatusBadge from '../ui/status-badge';
 import AppSelect from '../ui/inputs/app-select';
@@ -13,6 +13,8 @@ export interface LeaveHistoryTableProps {
   selectedStatus?: LeaveStatus | 'ALL';
   onStatusChange?: (status: LeaveStatus | 'ALL') => void;
   isLoading?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const LeaveHistoryTable: React.FC<LeaveHistoryTableProps> = ({
@@ -20,6 +22,8 @@ export const LeaveHistoryTable: React.FC<LeaveHistoryTableProps> = ({
   selectedStatus = 'ALL',
   onStatusChange,
   isLoading = false,
+  onRefresh,
+  isRefreshing = false,
 }) => {
   const [filter, setFilter] = useState<LeaveStatus | 'ALL'>(selectedStatus);
 
@@ -47,12 +51,32 @@ export const LeaveHistoryTable: React.FC<LeaveHistoryTableProps> = ({
           </p>
         </div>
 
-        <div className="w-full sm:w-56">
-          <AppSelect
-            options={LEAVE_STATUS_OPTIONS}
-            value={filter}
-            onChange={handleFilterChange}
-          />
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          {/* Refresh Button */}
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing || isLoading}
+              title="Refresh latest leave history"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 hover:text-indigo-600 border border-slate-200 transition-colors disabled:opacity-50 shrink-0"
+            >
+              <RotateCw
+                className={`w-3.5 h-3.5 text-indigo-600 ${
+                  isRefreshing ? 'animate-spin' : ''
+                }`}
+              />
+              <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          )}
+
+          <div className="w-full sm:w-56">
+            <AppSelect
+              options={LEAVE_STATUS_OPTIONS}
+              value={filter}
+              onChange={handleFilterChange}
+            />
+          </div>
         </div>
       </div>
 
@@ -137,4 +161,3 @@ export const LeaveHistoryTable: React.FC<LeaveHistoryTableProps> = ({
 };
 
 export default LeaveHistoryTable;
-

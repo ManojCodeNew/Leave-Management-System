@@ -46,5 +46,12 @@ export interface EmployeeDashboardData {
   };
   balance: LeaveBalanceSummary;
   recentApplications: LeaveApplication[];
+  approvedLeaves?: {
+    _id: string;
+    startDate: string;
+    endDate: string;
+    duration: number;
+    reason: string;
+  }[];
 }
 

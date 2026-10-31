@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { User } from './models/user.model.js';
 import { LeaveApplication } from './models/leave-application.model.js';
+import { parseUTCStartOfDay, parseUTCEndOfDay } from './controllers/leave.controller.js';
 
 dotenv.config();
 
@@ -44,8 +45,8 @@ const seedData = async () => {
       role: 'EMPLOYEE',
       department: 'Software Engineering',
       leaveAllocation: 20,
-      usedLeave: 3, // 3 days already approved
-      availableLeave: 17,
+      usedLeave: 2, // 2 days already approved (Oct 10 Saturday & Oct 12 Monday, Sunday Oct 11 excluded)
+      availableLeave: 18,
     });
 
     const emp2 = await User.create({
@@ -75,12 +76,12 @@ const seedData = async () => {
     console.log('[Seed] Created 3 Employees.');
 
     // 3. Create Sample Leave Applications
-    // Manoj's approved leave
+    // Manoj's approved leave: Oct 10 (Sat) to Oct 12 (Mon) -> 2 working days (Sunday Oct 11 excluded)
     await LeaveApplication.create({
       employee: emp1._id,
-      startDate: new Date('2026-10-10'),
-      endDate: new Date('2026-10-12'),
-      duration: 3,
+      startDate: parseUTCStartOfDay('2026-10-10'),
+      endDate: parseUTCEndOfDay('2026-10-12'),
+      duration: 2,
       reason: 'Attending family wedding ceremony.',
       status: 'APPROVED',
       appliedAt: new Date('2026-10-01'),
@@ -89,33 +90,33 @@ const seedData = async () => {
       adminComment: 'Approved. Enjoy the family function!',
     });
 
-    // Manoj's pending leave
+    // Manoj's pending leave: Nov 17 (Tue) to Nov 18 (Wed) -> 2 working days
     await LeaveApplication.create({
       employee: emp1._id,
-      startDate: new Date('2026-11-15'),
-      endDate: new Date('2026-11-16'),
+      startDate: parseUTCStartOfDay('2026-11-17'),
+      endDate: parseUTCEndOfDay('2026-11-18'),
       duration: 2,
       reason: 'Personal medical checkup and routine consultation.',
       status: 'PENDING',
       appliedAt: new Date('2026-10-28'),
     });
 
-    // Sarah's pending leave
+    // Sarah's pending leave: Nov 23 (Mon) to Nov 25 (Wed) -> 3 working days
     await LeaveApplication.create({
       employee: emp2._id,
-      startDate: new Date('2026-11-20'),
-      endDate: new Date('2026-11-22'),
+      startDate: parseUTCStartOfDay('2026-11-23'),
+      endDate: parseUTCEndOfDay('2026-11-25'),
       duration: 3,
       reason: 'Annual family holiday trip.',
       status: 'PENDING',
       appliedAt: new Date('2026-10-29'),
     });
 
-    // Alex's approved leave
+    // Alex's approved leave: Sep 07 (Mon) to Sep 10 (Thu) -> 4 working days
     await LeaveApplication.create({
       employee: emp3._id,
-      startDate: new Date('2026-09-05'),
-      endDate: new Date('2026-09-08'),
+      startDate: parseUTCStartOfDay('2026-09-07'),
+      endDate: parseUTCEndOfDay('2026-09-10'),
       duration: 4,
       reason: 'Home renovation and relocation.',
       status: 'APPROVED',
@@ -125,13 +126,13 @@ const seedData = async () => {
       adminComment: 'Approved as per team schedule.',
     });
 
-    // Alex's rejected leave
+    // Alex's rejected leave: Oct 02 (Fri) to Oct 07 (Wed) -> 5 working days (Sun Oct 4 excluded)
     await LeaveApplication.create({
       employee: emp3._id,
-      startDate: new Date('2026-10-01'),
-      endDate: new Date('2026-10-05'),
+      startDate: parseUTCStartOfDay('2026-10-02'),
+      endDate: parseUTCEndOfDay('2026-10-07'),
       duration: 5,
-      reason: 'Urgent unplanned trip.',
+      reason: 'Urgent unplanned personal travel.',
       status: 'REJECTED',
       appliedAt: new Date('2026-09-28'),
       reviewedBy: admin._id,
@@ -139,7 +140,7 @@ const seedData = async () => {
       adminComment: 'Rejected due to critical release sprint during this period.',
     });
 
-    console.log('[Seed] Created sample leave applications with diverse statuses.');
+    console.log('[Seed] Created sample leave applications with Sunday exclusion and normalized boundaries.');
     console.log('----------------------------------------------------');
     console.log('Default credentials for testing:');
     console.log('ADMIN:    admin@exelon.com    / admin123');
@@ -157,4 +158,3 @@ const seedData = async () => {
 };
 
 seedData();
-
