@@ -1,8 +1,7 @@
 # BUSINESS REQUIREMENTS DOCUMENT (BRD)
 
 ## Project: Enterprise Leave Management System (LMS)
-**Organization:** Exelon Circuits Pvt. Ltd.  
-**Version:** 2.0.0  
+**Document Version:** 2.0.0  
 **Effective Date:** October 31, 2026  
 **Document Status:** Approved & Implemented  
 **Target Audience:** Engineering Leads, Software Developers, QA Engineers, DevOps / System Administrators, and HR Leadership  
@@ -11,9 +10,9 @@
 
 ## 1. Executive Summary
 
-This Business Requirements Document (BRD) details the comprehensive functional, operational, architectural, and deployment requirements for the **Exelon Leave Management System (LMS)**. 
+This Business Requirements Document (BRD) details the comprehensive functional, operational, architectural, and deployment requirements for the **Enterprise Leave Management System (LMS)**. 
 
-The primary business objective is to transition Exelon Circuits Pvt. Ltd. from fragmented, error-prone leave administration (spreadsheets, emails, paper forms) to a modern, centralized, automated web platform. The system enforces strict organizational leave policies, prevents scheduling conflicts and duplicate applications, automates balance accounting, provides administrative decisioning workflows with audit trails, and guarantees multi-user session security across distributed work environments.
+The primary business objective is to transition the enterprise from fragmented, error-prone leave administration (spreadsheets, emails, paper forms) to a modern, centralized, automated web platform. The system enforces strict organizational leave policies, prevents scheduling conflicts and duplicate applications, automates balance accounting, provides administrative decisioning workflows with audit trails, and guarantees multi-user session security across distributed work environments.
 
 ---
 
@@ -47,7 +46,7 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 | **Manually Refresh History & Sync Dashboard** | Yes | No | TanStack Query Invalidation |
 | **Access Organization Admin Dashboard** | No | Yes | Protected Route Guard & Admin Middleware |
 | **View Organization-Wide Leave Applications** | No | Yes | `/api/admin/leaves` |
-| **Approve / Reject Leave Requests with Notes** | No | Yes | `/api/admin/leaves/:id/approve|reject` |
+| **Approve / Reject Leave Requests with Notes** | No | Yes | `/api/admin/leaves/:id/approve\|reject` |
 | **Access Organization Workforce Directory** | No | Yes | `/api/admin/employees` |
 | **View Aggregated Leave & Quota Analytics** | No | Yes | `/api/admin/dashboard` |
 
@@ -63,10 +62,10 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 
 ### 4.2 1-Click Quick Demo Login
 - Provides pre-configured demo account buttons on the login screen for testing and assessment:
-  - **Admin**: `admin@exelon.com` (HR Administrator)
-  - **Employee 1**: `employee@exelon.com` (Software Engineering)
-  - **Employee 2**: `sarah.smith@exelon.com` (UI/UX Design)
-  - **Employee 3**: `alex.turner@exelon.com` (Quality Assurance)
+  - **Admin**: `admin@demo.com` (HR Administrator)
+  - **Employee 1**: `employee@demo.com` (Software Engineering)
+  - **Employee 2**: `sarah.smith@demo.com` (UI/UX Design)
+  - **Employee 3**: `alex.turner@demo.com` (Quality Assurance)
 - **Architecture**: Operates through the standard authentication pipeline, generating standard JWT tokens and user payloads without bypassing application logic.
 
 ### 4.3 Sunday Exclusion & Working Day Rules
@@ -136,9 +135,9 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 - **Organizational KPI Cards**: Live metrics for Total Employees, Total Requests, Pending Requests, Approved Requests, Rejected Requests, and Total Leave Days Taken.
 - **Employee Directory**: Complete roster of all employees with allocated quotas, used days, available balances, and request counts.
 
-### 4.11 Debounced Search Engine
-- Search inputs across employee leave history, admin leave management, and employee directories incorporate client-side debouncing (400ms delay).
-- Ensures network requests are throttled while users type, triggering server evaluation only after typing pauses.
+### 4.11 Instant Client-Side Search Filtering
+- Real-time instant search across leave history and employee records.
+- Filters updated data locally in-memory without unnecessary network requests or loading flicker.
 
 ### 4.12 API Pagination Metadata & TanStack Infinite Scroll
 - All listing endpoints (`/api/leaves`, `/api/admin/leaves`, `/api/admin/employees`) emit comprehensive pagination metadata:
@@ -170,7 +169,6 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 ### 5.3 Reliability & Transactional Consistency
 - Atomic database updates for user balances.
 - Centralized Express error-handling middleware preventing server crashes or raw stack trace leaks.
-- API health check endpoint (`/api/health`) for automated uptime monitoring.
 
 ---
 
@@ -185,6 +183,8 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 - Leave history refresh with synchronized dashboard updates.
 - Account switching cache isolation.
 - Admin review, metrics, and employee directory.
+- Instant search filtering.
+- Infinite scroll pagination.
 - Full deployment on remote cloud platforms.
 
 ### 6.2 Out-of-Scope (As Defined for this Assessment)
@@ -215,7 +215,7 @@ The application enforces strict Role-Based Access Control (RBAC) across two core
 | **AC-14** | Admin dashboard displays real-time KPI metrics and directory | Admin Dashboard Integration Test | **PASSED** |
 | **AC-15** | Role-based route guards prevent unauthorized navigation | Navigation Guard Test | **PASSED** |
 | **AC-16** | Zero TypeScript or Vite compilation errors on production build | `npm run build` Execution | **PASSED** |
-| **AC-17** | Search inputs debounce keystrokes by 400ms before querying API | Input & Network Monitor Test | **PASSED** |
+| **AC-17** | Instant client-side search filtering without network calls | UI & Interaction Verification | **PASSED** |
 | **AC-18** | APIs emit metadata and TanStack `useInfiniteQuery` loads pages on scroll | Infinite Scroll & API Meta Test | **PASSED** |
 
 ---
@@ -231,7 +231,7 @@ The application utilizes a modern, decoupled cloud architecture designed for hig
 │                        REMOTE HOSTING TOPOLOGY                         │
 │                                                                        │
 │   ┌────────────────────────┐              ┌────────────────────────┐   │
-│   │   Vercel Edge CDN      │              │  Render / Railway      │   │
+│   │   Vercel Edge CDN      │              │  Render Web Service    │   │
 │   │   Frontend Web App     │   HTTPS      │  Backend REST API      │   │
 │   │   (React 18 SPA)       ├─────────────►│  (Node.js / Express)   │   │
 │   │   Port: 443 (SSL/TLS)  │   REST API   │  Port: 5000 (Internal) │   │
@@ -247,11 +247,11 @@ The application utilizes a modern, decoupled cloud architecture designed for hig
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-| Tier | Hosting Platform | Host URL / Connection String | Environment Role |
+| Tier | Hosting Platform | Host URL / Live Deployment | Environment Role |
 |---|---|---|---|
-| **Frontend Web App** | **Vercel** (Global Edge Network) | `https://exelon-leave-management.vercel.app` | Static asset hosting, Edge SSL, HTML5 History rewrite fallback |
-| **Backend REST API** | **Render / Railway** | `https://leave-management-server-exelon.onrender.com` | Containerized Node.js runtime, REST routing, JWT authentication |
-| **Database Cluster** | **MongoDB Atlas Cloud** | `cluster0.r07g3vq.mongodb.net/leave_management_db` | Managed multi-AZ replica set, automated backups, encrypted at rest |
+| **Frontend Web App** | **Vercel** (Global Edge Network) | [https://leave-management-system-delta-ruddy.vercel.app/](https://leave-management-system-delta-ruddy.vercel.app/) | Static asset hosting, Edge SSL, HTML5 History rewrite fallback |
+| **Backend REST API** | **Render** | [https://leave-management-system-5iol.onrender.com](https://leave-management-system-5iol.onrender.com) | Containerized Node.js runtime, REST routing, JWT authentication |
+| **Database Cluster** | **MongoDB Atlas Cloud** | Multi-Region M0 Cluster | Managed multi-AZ replica set, automated backups, encrypted at rest |
 
 ---
 
@@ -259,7 +259,7 @@ The application utilizes a modern, decoupled cloud architecture designed for hig
 
 1. **Decoupled Client-Server Model**:
    - The React frontend is compiled into an optimized static bundle (`dist/`) distributed via Vercel's global CDN.
-   - The Express backend operates as an independent containerized Web Service on Render / Railway with its own process lifecycle and environment configuration.
+   - The Express backend operates as an independent containerized Web Service on Render with its own process lifecycle and environment configuration.
 2. **Automated Continuous Integration & Continuous Delivery (CI/CD)**:
    - Git repository integration triggers automated build pipelines on every push to the `main` or `master` branch.
    - Zero-downtime rolling deploys ensure uninterrupted user service during updates.
@@ -273,10 +273,10 @@ The application utilizes a modern, decoupled cloud architecture designed for hig
 To deploy or replicate this system independently, the following cloud accounts and services are required:
 
 1. **MongoDB Atlas Account**:
-   - Free-tier M0 or dedicated M10 cluster.
+   - Free-tier M0 or dedicated cluster.
    - Database User credentials with `readWriteAnyDatabase` privileges.
    - Network Access IP Whitelist entry (`0.0.0.0/0` for cloud container dynamic IPs).
-2. **Render or Railway Account**:
+2. **Render Account**:
    - Web Service instance running Node.js runtime environment.
    - Environment secret storage for database URIs and JWT secrets.
 3. **Vercel Account**:
@@ -295,11 +295,11 @@ Follow these procedures to deploy the system from scratch:
 3. Under **Security > Network Access**, click **Add IP Address** and enter `0.0.0.0/0` (Allow Access from Anywhere).
 4. Under **Deployment > Database**, click **Connect > Drivers**, copy the URI string, and append the database name:
    ```text
-   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/leave_management_db?retryWrites=true&w=majority
+   mongodb+srv://<username>:<password>@<cluster-url>/leave_management_db?retryWrites=true&w=majority
    ```
 
-#### Step 2: Deploy Backend Service (Render / Railway)
-1. In your cloud hosting dashboard (Render or Railway), select **New > Web Service** and connect the GitHub repository.
+#### Step 2: Deploy Backend Service (Render)
+1. In your cloud hosting dashboard (Render), select **New > Web Service** and connect the GitHub repository.
 2. Configure settings:
    - **Root Directory**: `server`
    - **Environment**: `Node`
@@ -310,10 +310,9 @@ Follow these procedures to deploy the system from scratch:
    - `MONGODB_URI` = `<your-mongodb-atlas-uri>`
    - `JWT_SECRET` = `<cryptographically-random-secret-key>`
    - `JWT_EXPIRES_IN` = `7d`
-   - `CLIENT_URL` = `<your-vercel-domain-or-*>`
+   - `CLIENT_URL` = `https://leave-management-system-delta-ruddy.vercel.app`
    - `NODE_ENV` = `production`
-4. Click **Deploy**. Once the build finishes, confirm the health check endpoint:
-   `https://<your-backend-host>/api/health`
+4. Click **Deploy**. Once the build finishes, verify the backend service status is live.
 
 #### Step 3: Seed Remote Database
 Run the seeding script locally pointing to the remote MongoDB Atlas URI:
@@ -331,7 +330,7 @@ Confirm that the default admin and employee accounts are created.
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
 3. Add Environment Variable:
-   - `VITE_API_URL` = `https://<your-backend-host>`
+   - `VITE_API_URL` = `https://leave-management-system-5iol.onrender.com`
 4. Deploy the project. Vercel automatically applies `vercel.json` for client-side routing rewrites.
 5. Access the production URL, test 1-click login, and verify live functionality.
 
@@ -356,16 +355,15 @@ When developing new features or applying bug fixes, follow this continuous deliv
    ```
 3. **Automated Pipeline Execution**:
    - **Vercel**: Automatically detects commit on `main`, runs `tsc && vite build`, and distributes the new bundle across edge servers worldwide in under 60 seconds.
-   - **Render / Railway**: Automatically pulls the latest commit, builds `server/src`, runs health checks, and replaces old container instances with zero downtime.
+   - **Render**: Automatically pulls the latest commit, builds `server/src`, and replaces old container instances with zero downtime.
 4. **Database Backward Compatibility**:
    - When introducing new schema fields, configure Mongoose schemas with sensible default values (`default: ...`) to preserve compatibility with existing database documents.
 
 ---
 
-### 8.6 Operational Maintenance, Monitoring & Health Verification
+### 8.6 Operational Maintenance & Monitoring
 
-- **Health Monitoring**: Monitor the `/api/health` endpoint with uptime tools (e.g. UptimeRobot, BetterUptime) to track API availability and response latency.
-- **Log Streaming**: Monitor production server logs in the Render/Railway log viewer to diagnose unexpected client errors or database connection drops.
+- **Log Streaming**: Monitor production server logs in the Render log viewer to diagnose unexpected client errors or database connection drops.
 - **Cold-Start Management**: Free-tier cloud instances spin down after inactivity. The application displays clean loading indicators during cold-start delays.
 - **Data Backup & Disaster Recovery**: Managed via MongoDB Atlas Continuous Cloud Backups, allowing point-in-time restores if required.
 

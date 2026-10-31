@@ -1,13 +1,12 @@
-# Exelon LMS — Enterprise Leave Management System
+# LeaveMate — Enterprise Leave Management System
 
 [![Frontend](https://img.shields.io/badge/Frontend-React%2018%20%7C%20Vite%20%7C%20TypeScript-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express%20%7C%20TypeScript-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Database](https://img.shields.io/badge/Database-MongoDB%20Atlas%20%7C%20Mongoose-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
 [![State](https://img.shields.io/badge/State-Redux%20Toolkit%20%7C%20TanStack%20Query-764ABC?logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
 [![Styling](https://img.shields.io/badge/Styling-Tailwind%20CSS%203-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-Proprietary-blue.svg)](#)
 
-A full-stack, enterprise-grade **Leave Management System (LMS)** designed to streamline employee leave applications, supervisor review pipelines, leave balance accounting, and administrative workforce oversight. Built strictly adhering to enterprise business rules, role-based access control (RBAC), and modern frontend architecture.
+A modern, full-stack **Enterprise Leave Management System (LMS)** designed to streamline employee leave applications, supervisor review pipelines, leave quota tracking, and workforce oversight. Engineered with strict business logic enforcement, role-based access control (RBAC), intuitive slide-over drawer UX, and high-performance client-side caching.
 
 ---
 
@@ -17,10 +16,9 @@ The application is deployed and hosted on high-availability cloud infrastructure
 
 | Component | Hosting Platform | Live URL / Endpoint | Status |
 |---|---|---|:---:|
-| **Frontend Web App** | **Vercel** (Global Edge CDN) | [https://exelon-leave-management.vercel.app](https://exelon-leave-management.vercel.app) | 🟢 Live |
-| **Backend REST API** | **Render / Railway** (Containerized Node.js) | [https://leave-management-server-exelon.onrender.com](https://leave-management-server-exelon.onrender.com) | 🟢 Live |
-| **API Health Check** | **Render / Railway** | [https://leave-management-server-exelon.onrender.com/api/health](https://leave-management-server-exelon.onrender.com/api/health) | 🟢 Healthy |
-| **Cloud Database** | **MongoDB Atlas Cloud** | Multi-Region M0 Replica Cluster (`cluster0.r07g3vq.mongodb.net`) | 🟢 Connected |
+| **Frontend Web App** | **Vercel** (Global Edge CDN) | [https://leave-management-system-delta-ruddy.vercel.app/](https://leave-management-system-delta-ruddy.vercel.app/) | 🟢 Live |
+| **Backend REST API** | **Render** (Containerized Node.js Web Service) | [https://leave-management-system-5iol.onrender.com](https://leave-management-system-5iol.onrender.com) | 🟢 Live |
+| **Cloud Database** | **MongoDB Atlas Cloud** | Multi-Region M0 Replica Cluster | 🟢 Connected |
 
 > **Note for Evaluators**: If hosting platforms spin down idle free-tier instances (cold start), please allow 15–30 seconds for the backend service to resume on the initial request.
 
@@ -28,14 +26,14 @@ The application is deployed and hosted on high-availability cloud infrastructure
 
 ## 🔑 Pre-Configured Demo Accounts
 
-For immediate evaluation, the database is pre-seeded with verified test accounts. You can log in manually or use the **1-Click Quick Demo Login** buttons on the login screen:
+For immediate evaluation, the database includes verified test accounts. You can log in manually or use the **1-Click Quick Demo Login** buttons directly on the login screen:
 
 | Role | Account Name | Email Address | Password | Department & Quota |
 |---|---|---|---|---|
-| **Admin** | HR Administrator | `admin@exelon.com` | `admin123` | Human Resources (Full Review Access) |
-| **Employee** | Manoj Poojary | `employee@exelon.com` | `employee123` | Software Engineering (12 Days Available) |
-| **Employee** | Sarah Smith | `sarah.smith@exelon.com` | `employee123` | UI/UX Design (15 Days Available) |
-| **Employee** | Alex Turner | `alex.turner@exelon.com` | `employee123` | Quality Assurance (10 Days Available) |
+| **Admin** | HR Administrator | `admin@demo.com` | `admin123` | Human Resources (Full Review Access) |
+| **Employee** | Manoj Poojary | `employee@demo.com` | `employee123` | Software Engineering (12 Days Available) |
+| **Employee** | Sarah Smith | `sarah.smith@demo.com` | `employee123` | UI/UX Design (15 Days Available) |
+| **Employee** | Alex Turner | `alex.turner@demo.com` | `employee123` | Quality Assurance (10 Days Available) |
 
 ---
 
@@ -52,16 +50,15 @@ For immediate evaluation, the database is pre-seeded with verified test accounts
 9. [Remote Deployment Guide (For Independent Developers)](#-remote-deployment-guide-for-independent-developers)
 10. [Performance & Engineering Optimizations](#-performance--engineering-optimizations)
 11. [Troubleshooting & FAQ](#-troubleshooting--faq)
-12. [License & Credits](#-license--credits)
 
 ---
 
 ## 🎯 Project Overview
 
-In traditional enterprise settings, leave tracking is often fragmented across emails, spreadsheets, and paper forms, leading to scheduling conflicts, balance miscalculations, and lack of transparency.
+In traditional enterprise settings, leave management is often fragmented across emails, spreadsheets, and paper forms, leading to scheduling conflicts, balance miscalculations, and lack of transparency.
 
-**Exelon LMS** resolves these operational bottlenecks through:
-- **An Employee Portal**: Empowers staff to apply for single-day or multi-day leaves via an intuitive slide-over drawer, interact with a real-time calendar picker, observe live quota calculations, and monitor request history.
+**LeaveMate** eliminates these operational bottlenecks through:
+- **An Employee Self-Service Portal**: Staff can apply for single-day or multi-day leaves via an intuitive slide-over drawer, interact with a real-time calendar picker, observe live quota calculations, and monitor request history.
 - **An Administrative Portal**: Equips leadership and HR managers with real-time decisioning workflows (Approve/Reject with feedback), organization-wide leave metrics, and workforce allocation visibility.
 - **Rigorous Business Rule Enforcement**:
   - Automatically deducts approved leaves from employee balances.
@@ -119,7 +116,7 @@ In traditional enterprise settings, leave tracking is often fragmented across em
 
 ### 9. 🧹 Multi-User Account Switching & Cache Isolation
 - Resolves browser session data leakage when multiple employees log in consecutively on the same machine.
-- Logging out completely clears the Redux authentication state, purges localStorage tokens, and **flushes the TanStack Query client cache**.
+- Logging out completely clears the Redux authentication state, purges localStorage tokens, and **flushes the TanStack Query client cache** (`queryClient.clear()`).
 - When Employee B logs in after Employee A, fresh authenticated user information is fetched immediately without displaying cached data from Employee A.
 
 ### 10. 👨‍💼 Comprehensive Administrative Decisioning & Analytics
@@ -128,13 +125,13 @@ In traditional enterprise settings, leave tracking is often fragmented across em
 - **Organizational Analytics**: Real-time KPI cards for Total Employees, Total Requests, Pending Requests, Approved Requests, Rejected Requests, and Total Leave Days Taken.
 - **Workforce Directory**: Searchable, paginated table of all registered employees, departments, quotas, used days, available balances, and request breakdowns.
 
-### 11. 🔍 Debounced Search Optimization
-- Real-time search inputs on leaves and employee lists leverage a custom `useDebounce` hook (400ms delay).
-- Prevents redundant network queries while the user is actively typing, firing API requests only after input has settled.
+### 11. 🔍 Instant Client-Side Search Filtering
+- Real-time instant search across leave history and employee records.
+- Filters updated data locally in-memory without unnecessary network requests or loading flicker.
 
 ### 12. 📜 TanStack useInfiniteQuery & Automatic Scroll-to-Load
 - Listing endpoints (`/api/leaves`, `/api/admin/leaves`, `/api/admin/employees`) return standardized pagination metadata (`totalCount`, `totalPages`, `currentPage`, `limit`, `hasNextPage`, `hasPrevPage`).
-- Frontend queries consume TanStack Query's `useInfiniteQuery` paired with an `IntersectionObserver` sentinel. As the user scrolls down the page, subsequent pages are automatically loaded and seamlessly appended with an animated loader indicator.
+- Frontend queries consume TanStack Query's `useInfiniteQuery` paired with an `IntersectionObserver` sentinel. As the user scrolls down the page, subsequent pages are automatically loaded and seamlessly appended.
 
 ---
 
@@ -233,12 +230,11 @@ Task Project/
 ├── vercel.json                        # Vercel deployment & SPA routing rewrites configuration
 ├── vite.config.ts                     # Vite build & development proxy settings
 │
-├── doc/                               # Assignment Specifications & Standards
+├── doc/                               # Technical Specifications & Standards
 │   ├── AGENTS.md                      # Engineering guidelines and architectural mandates
 │   └── PROJECT_REQUIREMENTS.md        # Core business requirements and evaluation checklist
 │
 ├── server/                            # Backend Express Service
-│   ├── .env                           # Server environment secrets (MongoDB URI, JWT Secret)
 │   ├── .env.example                   # Backend environment template
 │   ├── nodemon.json                   # Nodemon development watcher config
 │   ├── package.json                   # Backend dependencies & runtime scripts
@@ -299,6 +295,7 @@ Task Project/
     ├── hooks/
     │   ├── use-admin.ts               # Custom TanStack Query hooks for admin queries
     │   ├── use-auth.ts                # Redux authentication and session hook
+    │   ├── use-infinite-scroll.ts     # IntersectionObserver hook for infinite scroll
     │   └── use-leave.ts               # Custom hooks for leave balance & applications
     ├── navigators/
     │   ├── app-navigator.tsx          # Main React Router switchboard
@@ -342,7 +339,7 @@ Follow these steps to set up and run the project locally on your machine.
 - **Node.js**: Version `18.x`, `20.x`, or higher installed (`node -v`)
 - **npm**: Version `9.x` or higher installed (`npm -v`)
 - **Git**: Installed on your system (`git --version`)
-- **MongoDB**: A free MongoDB Atlas cluster connection string or a local MongoDB service (`mongodb://localhost:27017/lms`)
+- **MongoDB**: A free MongoDB Atlas cluster connection string or a local MongoDB service (`mongodb://localhost:27017/leave_management_db`)
 
 ---
 
@@ -364,8 +361,8 @@ cd "Task Project"
    Open `server/.env` and update the values:
    ```env
    PORT=5000
-   MONGODB_URI=mongodb+srv://manojpoojary2004_db_user:I44GoNaKznhMIsFN@cluster0.r07g3vq.mongodb.net/leave_management_db?retryWrites=true&w=majority
-   JWT_SECRET=super_secret_jwt_key_leave_management_system_2026
+   MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/leave_management_db?retryWrites=true&w=majority
+   JWT_SECRET=<your-secure-jwt-secret-key>
    JWT_EXPIRES_IN=7d
    CLIENT_URL=http://localhost:5173
    NODE_ENV=development
@@ -408,7 +405,7 @@ npm run seed
 *Expected Console Output:*
 ```text
 Connecting to MongoDB...
-MongoDB Connected: cluster0.r07g3vq.mongodb.net
+MongoDB Connected: <cluster-host>
 Database Cleared successfully.
 Seeded 4 Users (1 Admin, 3 Employees).
 Seeded 5 Initial Leave Applications.
@@ -430,7 +427,7 @@ Alternatively, run them in two separate terminal tabs:
   cd server
   npm run dev
   ```
-  *Server runs at `http://localhost:5000` (Health check: `http://localhost:5000/api/health`)*
+  *Server runs at `http://localhost:5000`*
 
 - **Terminal 2 (Frontend Client)**:
   ```bash
@@ -449,8 +446,8 @@ Open your browser and navigate to `http://localhost:5173`.
 | Variable Name | Required | Default Value | Description |
 |---|:---:|---|---|
 | `PORT` | Yes | `5000` | Port on which the Express HTTP server listens. |
-| `MONGODB_URI` | Yes | `mongodb+srv://...` | Full MongoDB connection string (Atlas or local) including database name. |
-| `JWT_SECRET` | Yes | `super_secret_jwt_key...` | Cryptographic secret key used to sign and verify JSON Web Tokens. |
+| `MONGODB_URI` | Yes | `mongodb+srv://<username>:<password>@<cluster-url>/leave_management_db?retryWrites=true&w=majority` | Full MongoDB connection string (Atlas or local) including database name. |
+| `JWT_SECRET` | Yes | `<your-secure-jwt-secret-key>` | Cryptographic secret key used to sign and verify JSON Web Tokens. |
 | `JWT_EXPIRES_IN`| Yes | `7d` | Token expiration duration (e.g., `24h`, `7d`). |
 | `CLIENT_URL` | Yes | `http://localhost:5173` | Allowed frontend origin for Cross-Origin Resource Sharing (CORS). |
 | `NODE_ENV` | Yes | `development` | Runtime environment mode (`development` or `production`). |
@@ -459,7 +456,7 @@ Open your browser and navigate to `http://localhost:5173`.
 
 | Variable Name | Required | Default Value | Description |
 |---|:---:|---|---|
-| `VITE_API_URL` | Yes | `http://localhost:5000` | Base URL of the backend API. In production, points to your deployed backend (e.g. `https://your-api.onrender.com`). |
+| `VITE_API_URL` | Yes | `http://localhost:5000` | Base URL of the backend API. In production, points to your deployed backend (e.g. `https://leave-management-system-5iol.onrender.com`). |
 
 ---
 
@@ -470,14 +467,7 @@ All protected endpoints require the HTTP Authorization header:
 Authorization: Bearer <your_jwt_token>
 ```
 
-### 1. System Health
-| Method | Endpoint | Auth | Description |
-|---|---|:---:|---|
-| `GET` | `/api/health` | None | Service heartbeat check. Returns uptime and status. |
-
----
-
-### 2. Authentication (`/api/auth`)
+### 1. Authentication (`/api/auth`)
 | Method | Endpoint | Auth | Description |
 |---|---|:---:|---|
 | `POST` | `/api/auth/login` | None | Authenticate with email & password. Returns JWT token and user profile. |
@@ -490,7 +480,7 @@ POST /api/auth/login
 Content-Type: application/json
 
 {
-  "email": "employee@exelon.com",
+  "email": "employee@demo.com",
   "password": "employee123"
 }
 ```
@@ -505,7 +495,7 @@ Content-Type: application/json
     "user": {
       "id": "67246b9e28e1b212f483a001",
       "name": "Manoj Poojary",
-      "email": "employee@exelon.com",
+      "email": "employee@demo.com",
       "role": "employee",
       "department": "Software Engineering",
       "totalLeaveQuota": 20,
@@ -518,12 +508,12 @@ Content-Type: application/json
 
 ---
 
-### 3. Employee Leave Lifecycle (`/api/leaves`)
+### 2. Employee Leave Lifecycle (`/api/leaves`)
 | Method | Endpoint | Role | Description |
 |---|---|:---:|---|
 | `GET` | `/api/leaves/balance` | `employee` | Retrieve employee's leave balance, quota, and pending counts. |
 | `POST` | `/api/leaves` | `employee` | Submit a new leave application with validation. |
-| `GET` | `/api/leaves` | `employee` | Fetch personal leave history with optional status query parameter (`?status=ALL\|PENDING\|APPROVED\|REJECTED`). |
+| `GET` | `/api/leaves` | `employee` | Fetch personal leave history with optional query parameters (`?status=...&page=...&limit=...`). |
 | `GET` | `/api/leaves/:id` | `employee` / `admin` | Fetch specific leave application details by ID. |
 
 **Sample Leave Submission Request:**
@@ -543,14 +533,14 @@ Authorization: Bearer <token>
 
 ---
 
-### 4. Admin Review & Operations (`/api/admin`)
+### 3. Admin Review & Operations (`/api/admin`)
 | Method | Endpoint | Role | Description |
 |---|---|:---:|---|
 | `GET` | `/api/admin/dashboard` | `admin` | Retrieve organizational KPI metrics and leave statistics. |
-| `GET` | `/api/admin/leaves` | `admin` | Retrieve all submitted leave applications across the organization (supports `?status=...&search=...`). |
+| `GET` | `/api/admin/leaves` | `admin` | Retrieve all submitted leave applications across the organization (supports `?status=...&page=...&limit=...`). |
 | `POST` | `/api/admin/leaves/:id/approve` | `admin` | Approve leave, atomically deduct balance, record reviewer comments. |
 | `POST` | `/api/admin/leaves/:id/reject` | `admin` | Reject leave, preserve balance, record reviewer comments. |
-| `GET` | `/api/admin/employees` | `admin` | Retrieve complete employee directory with leave allocations. |
+| `GET` | `/api/admin/employees` | `admin` | Retrieve complete employee directory with leave allocations (supports pagination). |
 
 **Sample Approval Request:**
 ```json
@@ -571,7 +561,7 @@ This section provides clear, step-by-step instructions for deploying and updatin
 
 ### Architecture Overview
 - **Database**: MongoDB Atlas Cloud Cluster
-- **Backend API**: Render or Railway (Node.js runtime)
+- **Backend API**: Render (Node.js runtime)
 - **Frontend SPA**: Vercel (Edge CDN)
 
 ---
@@ -580,24 +570,22 @@ This section provides clear, step-by-step instructions for deploying and updatin
 1. Log in to [MongoDB Atlas](https://www.mongodb.com/atlas).
 2. Create a free shared M0 cluster (e.g., in `AWS / us-east-1` or closest region).
 3. Under **Security > Database Access**:
-   - Create a database user (e.g., `lms_admin`) with password and read/write privileges.
+   - Create a database user (e.g., `lms_admin`) with a secure password and read/write privileges.
 4. Under **Security > Network Access**:
-   - Add IP Address `0.0.0.0/0` (Allow Access from Anywhere) to permit connections from Render/Railway cloud containers.
+   - Add IP Address `0.0.0.0/0` (Allow Access from Anywhere) to permit connections from Render cloud containers.
 5. Under **Deployment > Database**:
    - Click **Connect** > **Drivers** > copy the connection string:
      ```text
-     mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/leave_management_db?retryWrites=true&w=majority
+     mongodb+srv://<username>:<password>@<cluster-url>/leave_management_db?retryWrites=true&w=majority
      ```
 
 ---
 
-### Step 2: Deploy Backend API on Render or Railway
-
-#### Option A: Deploying on Render (Recommended)
+### Step 2: Deploy Backend API on Render
 1. Sign in to [Render](https://render.com) and click **New + > Web Service**.
 2. Connect your GitHub repository containing the project.
 3. Configure service parameters:
-   - **Name**: `leave-management-server-exelon`
+   - **Name**: `leave-management-system-5iol`
    - **Root Directory**: `server`
    - **Environment**: `Node`
    - **Build Command**: `npm install && npm run build`
@@ -605,21 +593,12 @@ This section provides clear, step-by-step instructions for deploying and updatin
 4. In the **Environment Variables** section, add:
    - `PORT` = `5000`
    - `MONGODB_URI` = `<your-mongodb-atlas-connection-string>`
-   - `JWT_SECRET` = `<generate-a-strong-random-secret-key>`
+   - `JWT_SECRET` = `<your-secure-jwt-secret-key>`
    - `JWT_EXPIRES_IN` = `7d`
    - `NODE_ENV` = `production`
-   - `CLIENT_URL` = `<your-frontend-vercel-url>` (or `*` during initial setup)
+   - `CLIENT_URL` = `https://leave-management-system-delta-ruddy.vercel.app` (or `*` during initial setup)
 5. Click **Create Web Service**.
-6. Once deployed, note your service URL (e.g., `https://leave-management-server-exelon.onrender.com`).
-7. Test the health endpoint in your browser:
-   `https://leave-management-server-exelon.onrender.com/api/health`
-
-#### Option B: Deploying on Railway
-1. Sign in to [Railway](https://railway.app) and click **New Project > Deploy from GitHub repo**.
-2. Select the repository.
-3. In service settings, set **Root Directory** to `server`.
-4. Add the same Environment Variables listed above under **Variables**.
-5. Under **Settings > Networking**, click **Generate Domain**.
+6. Once deployed, note your service URL: `https://leave-management-system-5iol.onrender.com`.
 
 #### Seeding Remote Production Database:
 To seed demo accounts into the remote database, run the seed script locally pointing to the remote database URI:
@@ -639,7 +618,7 @@ MONGODB_URI="<your-remote-atlas-uri>" npm run seed
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
 4. In the **Environment Variables** section, add:
-   - `VITE_API_URL` = `https://leave-management-server-exelon.onrender.com` *(your deployed backend URL)*
+   - `VITE_API_URL` = `https://leave-management-system-5iol.onrender.com`
 5. Click **Deploy**.
 6. The repository includes a pre-configured `vercel.json` file:
    ```json
@@ -657,7 +636,7 @@ MONGODB_URI="<your-remote-atlas-uri>" npm run seed
 ---
 
 ### Step 4: Updating the Application (Continuous Deployment)
-Both Vercel and Render/Railway support automated Continuous Deployment (CD):
+Both Vercel and Render support automated Continuous Deployment (CD):
 1. Create a feature branch or commit changes to `master` / `main`.
 2. Push your changes to GitHub:
    ```bash
@@ -665,7 +644,7 @@ Both Vercel and Render/Railway support automated Continuous Deployment (CD):
    ```
 3. **Automated Pipeline**:
    - Vercel automatically runs `npm run build` and deploys the new frontend bundle to edge locations worldwide.
-   - Render / Railway automatically pulls the latest commit, builds the TypeScript server, and performs a zero-downtime rolling restart.
+   - Render automatically pulls the latest commit, builds the TypeScript server, and performs a zero-downtime rolling restart.
 
 ---
 
@@ -673,7 +652,7 @@ Both Vercel and Render/Railway support automated Continuous Deployment (CD):
 
 - **React Optimization Hooks**:
   - `useMemo`: Applied to expensive date filtering, Sunday calculations, timestamp intervals in calendar grids, and duration deductions.
-  - `useCallback`: Applied to event handlers across the calendar picker, drawer form submitters, and debounce mechanisms.
+  - `useCallback`: Applied to event handlers across the calendar picker, drawer form submitters, and interaction mechanisms.
   - `React.memo`: Applied to leaf components like `CalendarPicker` to prevent unnecessary re-rendering when parent state changes.
 - **Smart Query Invalidation**: TanStack Query selectively invalidates only affected keys (`['leaveBalance']`, `['leaves']`, `['adminDashboard']`) upon mutations rather than refreshing the whole tree.
 - **Cache Isolation**: Completely purges TanStack Query client cache upon logout via `queryClient.clear()`, guaranteeing clean multi-account transitions.
@@ -699,9 +678,3 @@ Both Vercel and Render/Railway support automated Continuous Deployment (CD):
 - **Solution**: Kill the existing process holding port 5000:
   - *Windows (PowerShell)*: `Get-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess | Stop-Process -Force`
   - *macOS / Linux*: `lsof -ti:5000 | xargs kill -9`
-
----
-
-## 📄 License & Credits
-
-Built for the **Exelon Circuits Pvt. Ltd.** assessment. Developed according to the comprehensive specifications outlined in `PROJECT_REQUIREMENTS.md` and `AGENTS.md`.
