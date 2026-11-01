@@ -6,8 +6,6 @@ on:
     # Run every 10 minutes
     - cron: "*/10 * * * *"
 
-  workflow_dispatch:
-
 jobs:
   health-check:
     name: Keep Backend Active
