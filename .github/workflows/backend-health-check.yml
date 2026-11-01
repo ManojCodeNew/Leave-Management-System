@@ -1,0 +1,28 @@
+
+name: Backend Health Check Workflow
+
+on:
+  schedule:
+    # Run every 10 minutes
+    - cron: "*/10 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Keep Backend Active
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send health check request
+        run: |
+          echo "Checking backend health..."
+
+          curl --fail \
+            --silent \
+            --show-error \
+            --max-time 120 \
+            "https://leave-management-system-5iol.onrender.com/api/health"
+
+          echo ""
+          echo "Backend health check completed!"
