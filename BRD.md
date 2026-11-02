@@ -310,7 +310,7 @@ Follow these procedures to deploy the system from scratch:
    - `MONGODB_URI` = `<your-mongodb-atlas-uri>`
    - `JWT_SECRET` = `<cryptographically-random-secret-key>`
    - `JWT_EXPIRES_IN` = `7d`
-   - `CLIENT_URL` = `https://leave-management-system-delta-ruddy.vercel.app`
+   - `CLIENT_URL` = `https://leavemanagementsystemtask.vercel.app/`
    - `NODE_ENV` = `production`
 4. Click **Deploy**. Once the build finishes, verify the backend service status is live.
 
